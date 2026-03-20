@@ -1,8 +1,8 @@
 # Dark Factory
 
-**Autonomous, production-grade software development with Claude Code.**
+**Specs in, production-grade features out.**
 
-Dark Factory is an open-source multi-agent pipeline that turns Claude Code into a team of specialists — a BA who discovers scope, a principal engineer who reviews architecture, a developer who implements, and a QA who validates against hidden test scenarios. No agent can cut corners because no agent has the full picture.
+Dark Factory is an open-source multi-agent framework for Claude Code. Feed it a raw idea or a bug report — it assembles a team of AI specialists (BA, principal engineer, developer, QA) who research, challenge, implement, and validate autonomously. No agent can cut corners because no agent has the full picture.
 
 > Inspired by [The Dark Factory Pattern](https://hackernoon.com/the-dark-factory-pattern-moving-from-ai-assisted-to-fully-autonomous-coding) — moving from AI-assisted to fully autonomous coding.
 

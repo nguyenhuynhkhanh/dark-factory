@@ -1,6 +1,6 @@
 # Dark Factory
 
-A spec-first, multi-agent pipeline for autonomous feature development and bug fixing. Inspired by the [Dark Factory pattern](https://hackernoon.com/the-dark-factory-pattern-moving-from-ai-assisted-to-fully-autonomous-coding).
+Specs in, production-grade features out. A multi-agent framework for Claude Code that turns raw ideas into implemented, tested, and validated code. Inspired by the [Dark Factory pattern](https://hackernoon.com/the-dark-factory-pattern-moving-from-ai-assisted-to-fully-autonomous-coding).
 
 ## What is Dark Factory?
 
