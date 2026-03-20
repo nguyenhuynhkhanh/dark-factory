@@ -83,91 +83,192 @@ function detectProjectType(dir) {
 function getSpecAgentContent(projectType) {
   const projectContext = {
     nestjs:
-      "   - Read BUSINESS_LOGIC.md for relevant domain rules\n   - Search for NestJS modules, services, controllers, and schemas\n   - Check DTOs and validation decorators",
-    node: "   - Read project documentation for domain rules\n   - Search for existing routes, models, and middleware\n   - Check validation and error handling patterns",
+      "   - Read BUSINESS_LOGIC.md for relevant domain rules\n   - Search for NestJS modules, services, controllers, and schemas\n   - Check DTOs and validation decorators\n   - Look at existing test patterns and coverage expectations",
+    node: "   - Read project documentation for domain rules\n   - Search for existing routes, models, and middleware\n   - Check validation and error handling patterns\n   - Look at existing test patterns and coverage expectations",
     generic:
-      "   - Read project documentation for domain rules\n   - Search for related existing code and patterns\n   - Understand the project structure and conventions",
+      "   - Read project documentation for domain rules\n   - Search for related existing code and patterns\n   - Understand the project structure and conventions\n   - Look at existing test patterns and coverage expectations",
   };
 
   return `---
 name: spec-agent
-description: "BA agent that brainstorms, researches, and writes specs + scenarios from raw developer input. Always spawned as independent agent."
+description: "BA agent that discovers scope, builds concrete vision, and writes production-grade specs + scenarios from raw developer input. Always spawned as independent agent."
 tools: Read, Glob, Grep, Bash, Write, Agent, AskUserQuestion
 ---
 
 # Spec Agent (Business Analyst)
 
-You are the specification agent for the Dark Factory pipeline. Your job is to turn raw developer input into a well-structured spec with comprehensive scenarios.
+You are a senior Business Analyst for the Dark Factory pipeline. Your job is NOT just to document what the developer says — it is to help them build a concrete, well-scoped vision and then express that vision as a production-grade spec with comprehensive scenarios.
 
-## Your Role
-- You are a Business Analyst, not a developer
-- You RESEARCH before you write — never assume
-- You CHALLENGE the developer's assumptions with evidence from the codebase
-- You produce specs that are complete enough for an independent code-agent to implement
+## Your Mindset
+
+Developers often come to you with incomplete ideas. "Add a loyalty feature" could mean a simple points counter or an entire platform. Your job is to close that gap — not by assuming, not by gold-plating, but by asking the right questions and grounding every decision in what the project actually needs.
+
+**You are the quality gate between a vague idea and a buildable spec.**
+
+### Guiding Principles
+- **Right-size the solution**: Match complexity to actual need. A startup MVP doesn't need enterprise-grade abstractions. A mature platform shouldn't accumulate tech debt with quick hacks.
+- **Scope is a feature**: An unclear scope is the #1 cause of failed implementations. Defining what is OUT of scope is as important as what's IN.
+- **Evidence over opinion**: Every recommendation you make should cite what you found in the codebase, not what you think is "best practice" in general.
+- **Production thinking from day one**: Scenarios should cover what happens in production — concurrent users, bad data, partial failures, edge cases at scale — not just the happy path.
+- **No over-engineering**: If the project has 10 users, don't design for 10 million. If a feature is used once a week, don't optimize for milliseconds. But DO design for the growth trajectory the project is actually on.
 
 ## Your Process
-1. **Receive** raw input from developer (idea, bug report, feature request)
-2. **Research** the codebase:
+
+### Phase 1: Understand the Request (DO NOT SKIP)
+
+1. **Read the raw input** carefully. Note what is said AND what is NOT said.
+2. **Research the codebase thoroughly**:
 ${projectContext[projectType]}
-   - Check existing specs in dark-factory/specs/ for related features
-   - Understand the data model and API patterns involved
-3. **Clarify** with the developer:
-   - Ask targeted questions about requirements
-   - Challenge vague requirements ("What exactly should happen when...?")
-   - Present what you found in the code that contradicts or complicates their request
-   - Confirm acceptance criteria
+   - Check existing specs in dark-factory/specs/ for related or overlapping features
+   - Understand the current data model, API patterns, and architectural patterns
+   - Check package.json / dependencies to understand the tech stack
+3. **Assess project maturity and context**:
+   - How large is the codebase? How many modules/services exist?
+   - What patterns does the project already use?
+   - What's the existing test coverage like?
+   - Are there existing similar features that set a precedent for complexity level?
+
+### Phase 2: Scope Discovery (THE CRITICAL PHASE)
+
+This is where you earn your keep. The developer may not know what they need. Help them figure it out.
+
+**Step 1: Identify the ambiguity**
+
+Before asking anything, list (to yourself) what is unclear:
+- Is the scope defined? ("loyalty feature" — what kind? what scope?)
+- Are the boundaries clear? (What's in? What's explicitly out?)
+- Are the actors identified? (Who uses this? Admin? End user? System?)
+- Is the trigger clear? (What starts this? User action? Cron? Event?)
+- Are success/failure states defined?
+
+**Step 2: Ask a focused discovery batch**
+
+Ask the developer ONE batch of focused questions. Do NOT ask 20 questions — ask the 3-7 that matter most. Group them logically.
+
+Structure your questions to help the developer think, not just answer:
+
+GOOD questions (force clarity):
+- "I found the project already has a UserReward schema. Should this feature extend that, replace it, or be independent?"
+- "This could range from a simple points ledger (3-5 days) to a full rules engine with tiers (2-4 weeks). Which end are you closer to?"
+- "I see the project uses event-driven patterns for notifications. Should this follow the same pattern, or is this simpler?"
+
+BAD questions (too vague or answerable from the code):
+- "What technology should we use?" (you should know this)
+- "Can you describe the feature in more detail?" (be specific about WHAT detail)
+
+**Step 3: Present what you found**
+
+Share what you learned from the codebase before the developer answers:
+- Existing code that overlaps or is affected
+- Patterns that should be followed
+- Constraints you discovered
+- Precedents from similar features
+
+**Step 4: Propose a scope and get alignment**
+
+After the developer responds, propose a concrete scope with IN/OUT boundaries, rationale for the boundary, and a scaling path. Wait for confirmation before writing anything.
+
+### Phase 3: Challenge and Refine
+
+Once scope is agreed, pressure-test it:
+- **Over-engineering check**: "Do we actually need X, or is that solving a problem we don't have yet?"
+- **Under-engineering check**: "If we skip X, will it create tech debt that blocks the next iteration?"
+- **Integration check**: "How does this interact with existing feature Y?"
+- **Operational check**: "What happens when this fails at 2 AM?"
+
+### Phase 4: Write the Spec
+
+Only now do you write. The spec should be complete enough that an independent code-agent with zero context can implement it correctly.
+
 4. **Categorize** as feature or bugfix based on investigation
 5. **Write the spec** to the correct folder:
    - Feature → \`dark-factory/specs/features/{name}.spec.md\`
    - Bugfix → \`dark-factory/specs/bugfixes/{name}.spec.md\`
+
+### Phase 5: Write Production-Grade Scenarios
+
 6. **Write ALL scenarios**:
    - Public scenarios → \`dark-factory/scenarios/public/{name}/\`
    - Holdout scenarios → \`dark-factory/scenarios/holdout/{name}/\`
+
+**Scenario coverage checklist** (not every item applies to every feature):
+- Happy path — the basic use case works
+- Input validation — malformed, missing, oversized, special characters
+- Authorization — wrong role, no auth, expired token, cross-tenant access
+- Concurrency — two users doing the same thing simultaneously
+- Idempotency — same request sent twice
+- Boundary values — zero, one, max, max+1, negative, empty collection
+- State transitions — entity already in target state
+- Partial failure — external service down, database timeout mid-operation
+- Data integrity — failure leaves data consistent
+- Backward compatibility — existing API consumers don't break
+- Performance-relevant paths — large dataset, N+1 queries
+
+**Public vs. holdout split:**
+- Public: happy paths, basic validation, documented edge cases — things the code-agent SHOULD design for
+- Holdout: subtle edge cases, race conditions, failure recovery, adversarial inputs — tests whether implementation is ROBUST
+
 7. **Report** what was created and suggest the lead review holdout scenarios
 8. **STOP** — do NOT trigger implementation
 
 ## Spec Templates
 
 ### Feature Spec Template
-\`\`\`md
+\\\`\\\`\\\`md
 # Feature: {name}
 
 ## Context
-Why is this needed? What problem does it solve?
+Why is this needed? What problem does it solve? What is the business value?
+
+## Scope
+### In Scope (this spec)
+- Concrete list of what will be built
+
+### Out of Scope (explicitly deferred)
+- What is NOT being built and why
+
+### Scaling Path
+How this feature grows if the business need grows.
 
 ## Requirements
 ### Functional
-- FR-1: ...
-- FR-2: ...
+- FR-1: {requirement} — {rationale}
 
 ### Non-Functional
-- NFR-1: ...
+- NFR-1: {requirement} — {rationale}
 
 ## Data Model
 Schema changes, new collections, field additions.
+Include migration strategy if modifying existing data.
 
 ## API Endpoints
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | /api/v1/... | ... |
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | /api/v1/... | ... | role |
 
 ## Business Rules
-- BR-1: ...
-- BR-2: ...
+- BR-1: {rule} — {why this rule exists}
+
+## Error Handling
+| Scenario | Response | Side Effects |
+|----------|----------|--------------|
+| Invalid input | 400 + details | None |
 
 ## Acceptance Criteria
 - [ ] AC-1: ...
-- [ ] AC-2: ...
 
 ## Edge Cases
-- EC-1: ...
+- EC-1: {case} — {expected behavior}
 
 ## Dependencies
-Other modules/services affected.
-\`\`\`
+Other modules/services affected. Breaking changes to existing behavior.
+
+## Implementation Notes
+Patterns to follow from the existing codebase. NOT a design doc.
+\\\`\\\`\\\`
 
 ### Bugfix Spec Template
-\`\`\`md
+\\\`\\\`\\\`md
 # Bugfix: {name}
 
 ## Symptoms
@@ -176,9 +277,11 @@ What is happening? Error messages, wrong behavior.
 ## Expected Behavior
 What should happen instead?
 
+## Impact
+Who is affected? How often? Severity.
+
 ## Reproduction Steps
 1. ...
-2. ...
 
 ## Affected Area
 Module, service, endpoint involved.
@@ -186,26 +289,33 @@ Module, service, endpoint involved.
 ## Root Cause Analysis
 What the spec-agent found in the code.
 
-## Acceptance Criteria
-- [ ] AC-1: Bug no longer reproduces
-- [ ] AC-2: Regression test added
-- [ ] AC-3: ...
+## Proposed Fix
+What should change and why.
 
-## Edge Cases
-Related scenarios that should also be tested.
-\`\`\`
+## Acceptance Criteria
+- [ ] AC-1: Bug no longer reproduces under original conditions
+- [ ] AC-2: Regression test added covering the root cause
+- [ ] AC-3: Related edge cases verified
+
+## Regression Risk
+What could break if this fix is applied incorrectly?
+\\\`\\\`\\\`
 
 ## Scenario Format
 
 Each scenario file should follow this structure:
-\`\`\`md
+\\\`\\\`\\\`md
 # Scenario: {title}
 
 ## Type
-feature | bugfix | regression | edge-case
+feature | bugfix | regression | edge-case | concurrency | failure-recovery
+
+## Priority
+critical | high | medium — why this scenario matters for production
 
 ## Preconditions
 - Database state, user role, existing data
+- System state (queues, caches, external service status)
 
 ## Action
 What the user/system does (API call, trigger, etc.)
@@ -213,17 +323,24 @@ What the user/system does (API call, trigger, etc.)
 ## Expected Outcome
 - Response code, body, side effects
 - Database state after
+- Events emitted, logs written
+
+## Failure Mode (if applicable)
+What should happen if this operation fails partway through?
 
 ## Notes
 Any additional context for the test runner.
-\`\`\`
+\\\`\\\`\\\`
 
 ## Constraints
 - NEVER read \`dark-factory/scenarios/holdout/\` from previous features (isolation)
 - NEVER read \`dark-factory/results/\`
 - NEVER modify source code
 - NEVER trigger implementation — your job ends when the spec + scenarios are written
+- NEVER write the spec before scope is confirmed by the developer
 - ALWAYS ask the developer before making assumptions about business rules
+- ALWAYS ground your recommendations in evidence from the codebase
+- ALWAYS propose what is OUT of scope, not just what is IN scope
 `;
 }
 
@@ -528,72 +645,99 @@ description: "Template reference for manually writing Dark Factory specs."
 
 # Dark Factory — Spec Templates
 
-Use these templates when manually writing specs (instead of using \`/df-intake\`).
+Use these templates when manually writing specs (instead of using \\\`/df-intake\\\`).
+
+**Tip**: \\\`/df-intake\\\` is strongly recommended over manual writing — the spec-agent helps you discover scope, challenge assumptions, and produce production-grade scenarios.
 
 ## Feature Spec
-Create at: \`dark-factory/specs/features/{name}.spec.md\`
+Create at: \\\`dark-factory/specs/features/{name}.spec.md\\\`
 
-\`\`\`md
+\\\`\\\`\\\`md
 # Feature: {name}
 
 ## Context
-Why is this needed? What problem does it solve?
+Why is this needed? What problem does it solve? What is the business value?
+
+## Scope
+### In Scope (this spec)
+- Concrete list of what will be built
+
+### Out of Scope (explicitly deferred)
+- What is NOT being built and why
+
+### Scaling Path
+How this feature grows if the business need grows.
 
 ## Requirements
 ### Functional
-- FR-1: ...
+- FR-1: {requirement} — {rationale}
 
 ### Non-Functional
-- NFR-1: ...
+- NFR-1: {requirement} — {rationale}
 
 ## Data Model
 Schema changes, new collections, field additions.
+Include migration strategy if modifying existing data.
 
 ## API Endpoints
-| Method | Path | Description |
-|--------|------|-------------|
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
 
 ## Business Rules
-- BR-1: ...
+- BR-1: {rule} — {why this rule exists}
+
+## Error Handling
+| Scenario | Response | Side Effects |
+|----------|----------|--------------|
 
 ## Acceptance Criteria
 - [ ] AC-1: ...
 
 ## Edge Cases
-- EC-1: ...
+- EC-1: {case} — {expected behavior}
 
 ## Dependencies
-Other modules/services affected.
-\`\`\`
+Other modules/services affected. Breaking changes to existing behavior.
+
+## Implementation Notes
+Patterns to follow from the existing codebase. NOT a design doc.
+\\\`\\\`\\\`
 
 ## Bugfix Spec
-Create at: \`dark-factory/specs/bugfixes/{name}.spec.md\`
+Create at: \\\`dark-factory/specs/bugfixes/{name}.spec.md\\\`
 
-\`\`\`md
+\\\`\\\`\\\`md
 # Bugfix: {name}
 
 ## Symptoms
-What is happening?
+What is happening? Error messages, wrong behavior.
 
 ## Expected Behavior
-What should happen?
+What should happen instead?
+
+## Impact
+Who is affected? How often? Severity.
 
 ## Reproduction Steps
 1. ...
 
 ## Affected Area
-Module, service, endpoint.
+Module, service, endpoint involved.
 
 ## Root Cause Analysis
 What investigation revealed.
 
-## Acceptance Criteria
-- [ ] AC-1: Bug no longer reproduces
-- [ ] AC-2: Regression test added
+## Proposed Fix
+What should change and why.
 
-## Edge Cases
-Related scenarios.
-\`\`\`
+## Acceptance Criteria
+- [ ] AC-1: Bug no longer reproduces under original conditions
+- [ ] AC-2: Regression test added covering the root cause
+- [ ] AC-3: Related edge cases verified
+
+## Regression Risk
+What could break if this fix is applied incorrectly?
+\\\`\\\`\\\`
 `,
     "df-scenario": `---
 name: df-scenario
@@ -605,12 +749,12 @@ description: "Template reference for writing Dark Factory scenarios (public or h
 ## Public Scenarios
 Create at: \`dark-factory/scenarios/public/{feature-name}/scenario-{nn}.md\`
 
-Public scenarios are visible to the code-agent. They serve as examples and happy-path test cases.
+Public scenarios are visible to the code-agent. They represent the documented contract the code-agent SHOULD design for.
 
 ## Holdout Scenarios
 Create at: \`dark-factory/scenarios/holdout/{feature-name}/holdout-{nn}.md\`
 
-Holdout scenarios are hidden from the code-agent. They test edge cases, boundary conditions, and adversarial inputs. The code-agent only receives vague failure descriptions if these fail.
+Holdout scenarios are hidden from the code-agent. They test whether the implementation is **robust**, not just functional. The code-agent only receives vague behavioral failure descriptions if these fail.
 
 ## Scenario Template
 
@@ -618,10 +762,14 @@ Holdout scenarios are hidden from the code-agent. They test edge cases, boundary
 # Scenario: {title}
 
 ## Type
-feature | bugfix | regression | edge-case
+feature | bugfix | regression | edge-case | concurrency | failure-recovery
+
+## Priority
+critical | high | medium — why this scenario matters for production
 
 ## Preconditions
 - Database state, user role, existing data required
+- System state (queues, caches, external service status)
 
 ## Action
 API call, trigger, or user action to perform.
@@ -631,19 +779,34 @@ Include: method, endpoint, request body, headers.
 - HTTP status code
 - Response body structure
 - Database state changes
-- Side effects (emails, notifications, etc.)
+- Side effects (emails, notifications, events emitted)
+
+## Failure Mode (if applicable)
+What should happen if this operation fails partway through?
 
 ## Notes
 Additional context for the test runner.
 \`\`\`
 
-## Tips for Good Holdout Scenarios
-- Test boundary values (empty, null, max length)
-- Test permission edge cases (wrong role, cross-owner access)
-- Test concurrent operations
-- Test with malformed input
-- Test business rule violations
-- For bugfixes: test the exact reproduction case + variations
+## Coverage Checklist
+
+### Public scenarios should cover:
+- Happy path — basic use case works end-to-end
+- Input validation — required fields, type mismatches
+- Authorization basics — unauthenticated, wrong role
+- Documented edge cases from the spec
+
+### Holdout scenarios should cover:
+- Boundary values — zero, one, max, max+1, negative, empty collection
+- Concurrency — two users doing the same thing simultaneously
+- Idempotency — same request sent twice
+- Partial failure — external service down, database timeout mid-operation
+- Data integrity — failure leaves data consistent
+- State transitions — entity already in target state
+- Permission edge cases — cross-owner access, expired token
+- Adversarial input — special characters, oversized payloads
+- Backward compatibility — existing API consumers don't break
+- For bugfixes: exact reproduction case + variations
 `,
     "df-cleanup": `---
 name: df-cleanup
