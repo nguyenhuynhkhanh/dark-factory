@@ -1164,7 +1164,7 @@ function main() {
   console.log("\nCreating skills...");
   for (const skill of ["df-intake", "df-debug", "df-orchestrate", "df-spec", "df-scenario", "df-cleanup"]) {
     writeFile(
-      path.join(dir, ".claude", "skills", "dark-factory", skill, "SKILL.md"),
+      path.join(dir, ".claude", "skills", skill, "SKILL.md"),
       getSkillContent(skill)
     );
   }

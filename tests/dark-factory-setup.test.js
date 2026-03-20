@@ -10,7 +10,7 @@ const { execSync } = require("child_process");
 
 const ROOT = path.resolve(__dirname, "..");
 const AGENTS_DIR = path.join(ROOT, ".claude", "agents");
-const SKILLS_DIR = path.join(ROOT, ".claude", "skills", "dark-factory");
+const SKILLS_DIR = path.join(ROOT, ".claude", "skills");
 const DF_DIR = path.join(ROOT, "dark-factory");
 
 function readAgent(name) {
@@ -596,10 +596,10 @@ describe("init-dark-factory.js scaffold", () => {
   ];
 
   for (const skill of expectedSkillDirs) {
-    it(`creates .claude/skills/dark-factory/${skill}/SKILL.md`, () => {
+    it(`creates .claude/skills/${skill}/SKILL.md`, () => {
       assert.ok(
         fs.existsSync(
-          path.join(tmpDir, ".claude", "skills", "dark-factory", skill, "SKILL.md")
+          path.join(tmpDir, ".claude", "skills", skill, "SKILL.md")
         ),
         `Scaffold should create ${skill}/SKILL.md`
       );
@@ -668,7 +668,7 @@ describe("init-dark-factory.js scaffold", () => {
   it("scaffold skills have matching frontmatter names", () => {
     for (const skill of expectedSkillDirs) {
       const content = fs.readFileSync(
-        path.join(tmpDir, ".claude", "skills", "dark-factory", skill, "SKILL.md"),
+        path.join(tmpDir, ".claude", "skills", skill, "SKILL.md"),
         "utf8"
       );
       const fm = parseFrontmatter(content);
