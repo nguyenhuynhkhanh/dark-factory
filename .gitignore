@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+
+# Temp
+tmp/
+temp/
+
+# Claude Code — selectively track agents and skills
+/.claude/*
+!/.claude/agents/
+!/.claude/skills/
+
+# Dark Factory results (local test output)
+dark-factory/results/
