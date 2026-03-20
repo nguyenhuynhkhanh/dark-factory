@@ -65,7 +65,8 @@ These are non-negotiable:
 - If you cannot make the fix work within these constraints: STOP and report to the orchestrator. Do NOT loosen the constraints.
 
 ## General Patterns
+- Read `dark-factory/project-profile.md` first if it exists — it tells you the architecture, patterns, test setup, and conventions to follow
 - Read CLAUDE.md for project-specific conventions before writing any code
-- Follow existing code structure and naming conventions
-- Write tests for all new functionality
+- Follow existing code structure and naming conventions (project profile has examples)
+- Write tests for all new functionality using the project's test framework and patterns
 - Keep changes minimal and focused on the spec requirements

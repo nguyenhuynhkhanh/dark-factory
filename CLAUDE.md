@@ -5,12 +5,16 @@
 This project uses the Dark Factory pattern for feature development and bug fixes.
 
 ### Available Commands
+- `/df-onboard` — Map the project. Produces `dark-factory/project-profile.md` with architecture, conventions, quality bar. **Run this first on any existing project.**
 - `/df-intake {description}` — Start **feature** spec creation. Spawns an independent BA agent to research, brainstorm, and write specs + scenarios.
 - `/df-debug {description}` — Start **bug** investigation. Spawns an independent debug-agent for forensic root cause analysis, impact assessment, and debug report writing.
 - `/df-orchestrate {name}` — Start implementation. Auto-detects feature vs. bugfix mode. Auto-promotes holdout tests and archives on success.
 - `/df-cleanup` — Recovery/maintenance. Retries stuck promotions, completes archival, lists stale features.
 - `/df-spec` — Show spec templates for manual writing.
 - `/df-scenario` — Show scenario templates.
+
+### Onboarding (run once per project)
+`/df-onboard` → onboard-agent maps the codebase → produces `dark-factory/project-profile.md` → all agents reference it
 
 ### Feature Pipeline
 1. **Spec phase** (`/df-intake`): Developer provides raw input → spec-agent discovers scope, challenges, writes spec + all scenarios → DONE
@@ -48,3 +52,4 @@ This project uses the Dark Factory pattern for feature development and bug fixes
 - `dark-factory/results/{name}/` — Test output (gitignored)
 - `dark-factory/archive/{name}/` — Archived specs + scenarios (post-completion)
 - `dark-factory/manifest.json` — Feature lifecycle manifest
+- `dark-factory/project-profile.md` — Project architecture, conventions, and quality bar (from `/df-onboard`)

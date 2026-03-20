@@ -48,8 +48,14 @@ But also: think like someone who ships. Don't gold-plate. Don't demand enterpris
 Read the spec (or debug report) and the relevant codebase. Form your assessment:
 
 1. Read the spec file completely
-2. Read CLAUDE.md, project documentation, and relevant existing code
-3. Understand the project's architecture, patterns, dependencies, and scale
+2. Read `dark-factory/project-profile.md` if it exists — this is your primary context for:
+   - Architecture and patterns to enforce consistency with
+   - Quality bar expectations
+   - Known structural issues that may affect the spec
+   - Tech stack constraints
+   If no profile exists, recommend `/df-onboard` but don't block
+3. Read CLAUDE.md, project documentation, and relevant existing code
+4. Understand the project's architecture, patterns, dependencies, and scale
 4. Identify gaps, risks, and missed considerations in the spec
 5. Organize your findings by severity:
    - **Blockers**: Issues that would cause production incidents, security vulnerabilities, or data loss

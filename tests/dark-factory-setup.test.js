@@ -52,6 +52,7 @@ describe("Agent definitions", () => {
   const expectedAgents = [
     "spec-agent",
     "debug-agent",
+    "onboard-agent",
     "architect-agent",
     "code-agent",
     "test-agent",
@@ -81,6 +82,7 @@ describe("Agent definitions", () => {
 
 describe("Skill definitions", () => {
   const expectedSkills = [
+    "df-onboard",
     "df-intake",
     "df-debug",
     "df-orchestrate",
@@ -406,7 +408,76 @@ describe("Information barriers", () => {
 });
 
 // ===========================================================================
-// 7. Bugfix red-green integrity
+// 7. Project onboarding
+// ===========================================================================
+
+describe("Project onboarding", () => {
+  it("onboard-agent writes only to project-profile.md", () => {
+    const content = readAgent("onboard-agent");
+    assert.ok(
+      content.includes("project-profile.md"),
+      "onboard-agent should reference project-profile.md"
+    );
+    assert.ok(
+      content.includes("NEVER modify source code"),
+      "onboard-agent must not modify source code"
+    );
+  });
+
+  it("df-onboard skill spawns onboard-agent", () => {
+    const content = readSkill("df-onboard");
+    assert.ok(
+      content.includes("onboard-agent"),
+      "df-onboard should reference onboard-agent"
+    );
+  });
+
+  it("onboard-agent handles greenfield projects", () => {
+    const content = readAgent("onboard-agent");
+    assert.ok(
+      content.toLowerCase().includes("greenfield") ||
+        content.toLowerCase().includes("empty"),
+      "onboard-agent should handle empty/greenfield projects"
+    );
+  });
+
+  it("onboard-agent handles existing profiles (refresh check)", () => {
+    const content = readAgent("onboard-agent");
+    assert.ok(
+      content.includes("refresh") || content.includes("existing profile"),
+      "onboard-agent should check for existing profiles"
+    );
+  });
+
+  it("all key agents reference project-profile.md", () => {
+    for (const name of ["spec-agent", "debug-agent", "architect-agent", "code-agent"]) {
+      const content = readAgent(name);
+      assert.ok(
+        content.includes("project-profile.md"),
+        `${name} should reference project-profile.md`
+      );
+    }
+  });
+
+  it("df-orchestrate checks for project profile in pre-flight", () => {
+    const content = readSkill("df-orchestrate");
+    assert.ok(
+      content.includes("project-profile.md"),
+      "df-orchestrate should check for project profile"
+    );
+  });
+
+  it("CLAUDE.md documents /df-onboard", () => {
+    const claudeMd = fs.readFileSync(path.join(ROOT, "CLAUDE.md"), "utf8");
+    assert.ok(
+      claudeMd.includes("/df-onboard"),
+      "CLAUDE.md should document /df-onboard"
+    );
+  });
+});
+
+// ===========================================================================
+// 8. Bugfix red-green integrity
 // ===========================================================================
 
 describe("Bugfix red-green integrity", () => {
@@ -511,6 +582,7 @@ describe("CLAUDE.md completeness", () => {
   const claudeMd = fs.readFileSync(path.join(ROOT, "CLAUDE.md"), "utf8");
 
   const requiredCommands = [
+    "/df-onboard",
     "/df-intake",
     "/df-debug",
     "/df-orchestrate",
@@ -571,6 +643,7 @@ describe("init-dark-factory.js scaffold", () => {
   const expectedAgentFiles = [
     "spec-agent.md",
     "debug-agent.md",
+    "onboard-agent.md",
     "architect-agent.md",
     "code-agent.md",
     "test-agent.md",
@@ -587,6 +660,7 @@ describe("init-dark-factory.js scaffold", () => {
   }
 
   const expectedSkillDirs = [
+    "df-onboard",
     "df-intake",
     "df-debug",
     "df-orchestrate",

@@ -11,10 +11,13 @@ You are the orchestrator for the implementation phase.
 `/df-orchestrate {feature-name}`
 
 ## Pre-flight Checks
-1. Verify spec exists: `dark-factory/specs/features/{name}.spec.md` OR `dark-factory/specs/bugfixes/{name}.spec.md`
-2. Verify public scenarios exist: `dark-factory/scenarios/public/{name}/` has files
-3. Verify holdout scenarios exist: `dark-factory/scenarios/holdout/{name}/` has files
-4. If any missing → abort with clear message
+1. Check if `dark-factory/project-profile.md` exists:
+   - If missing → warn the developer: "No project profile found. Run `/df-onboard` first for best results. Agents will work without it, but may miss project conventions."
+   - Do NOT block — proceed with the warning
+2. Verify spec exists: `dark-factory/specs/features/{name}.spec.md` OR `dark-factory/specs/bugfixes/{name}.spec.md`
+3. Verify public scenarios exist: `dark-factory/scenarios/public/{name}/` has files
+4. Verify holdout scenarios exist: `dark-factory/scenarios/holdout/{name}/` has files
+5. If spec or scenarios missing → abort with clear message
 
 ## Smart Re-run Detection
 Check if `dark-factory/results/{name}/` has previous results:

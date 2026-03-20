@@ -6,6 +6,9 @@ A spec-first, multi-agent pipeline for autonomous feature development and bug fi
 
 Dark Factory separates software development into independent phases with strict information barriers between agents. It has **two distinct pipelines**:
 
+### Onboarding (run once)
+0. **Onboard Agent** (Project Cartographer) — Maps the project's architecture, conventions, tech stack, quality bar, and structural issues. Produces `dark-factory/project-profile.md` that all other agents reference.
+
 ### Feature Pipeline
 1. **Spec Agent** (Business Analyst) — Discovers scope, challenges assumptions, produces a detailed spec with comprehensive test scenarios
 2. **Architect Agent** (Principal Engineer) — Reviews spec for architecture, security, performance, production-readiness. Drives 3+ rounds of refinement with the spec-agent before any code is written.
@@ -103,10 +106,11 @@ Developer Input (bug)
 
 | Agent | Can Read | Cannot Read |
 |-------|----------|-------------|
-| spec-agent | Codebase, docs, existing specs | Holdout results, code-agent output |
-| debug-agent | Codebase, docs, git history, tests | Holdout from other features, results |
-| architect-agent | Spec/report, codebase, docs | ALL scenarios (public + holdout), results |
-| code-agent | Spec/report, public scenarios, codebase | Holdout scenarios, results |
+| onboard-agent | Entire codebase, docs, configs, deps | Nothing — full read access (write only to project-profile.md) |
+| spec-agent | Project profile, codebase, docs, specs | Holdout results, code-agent output |
+| debug-agent | Project profile, codebase, docs, git history | Holdout from other features, results |
+| architect-agent | Project profile, spec/report, codebase | ALL scenarios (public + holdout), results |
+| code-agent | Project profile, spec/report, public scenarios | Holdout scenarios, results |
 | test-agent | Spec/report, holdout scenarios, code | Public scenarios |
 | promote-agent | Results, test conventions, CLAUDE.md | Source code (read-only for conventions) |
 
@@ -115,6 +119,7 @@ Developer Input (bug)
 ```
 dark-factory/
 ├── README.md                          # This file
+├── project-profile.md                 # Project map (from /df-onboard)
 ├── manifest.json                      # Feature lifecycle tracking
 ├── specs/
 │   ├── features/                      # Feature specs
@@ -143,6 +148,23 @@ dark-factory/
 ```
 
 ## Commands
+
+### `/df-onboard`
+Map the project's architecture, conventions, and quality bar. **Run this first on any existing project.**
+
+```
+/df-onboard
+```
+
+The onboard-agent will:
+1. Detect the tech stack, framework, and dependencies
+2. Map architecture, code patterns, and shared abstractions
+3. Assess testing setup and quality bar
+4. Flag structural issues (inconsistencies, missing infrastructure, tech debt)
+5. Ask you questions about what code can't tell (user scale, deployment, fragile areas)
+6. Write `dark-factory/project-profile.md`
+
+All other agents read this profile before starting their work. Re-run after significant project changes.
 
 ### `/df-intake {description}`
 Start the **feature** spec creation phase. Provide a raw description of what you need.
@@ -212,6 +234,7 @@ Show scenario templates for manual writing.
 
 ## How to Add a New Feature
 
+0. **Onboard first** (if not done): `/df-onboard` — maps the project so agents understand conventions
 1. **Start intake**: `/df-intake {your feature description}`
 2. **Answer questions**: The spec-agent will ask clarifying questions to discover scope
 3. **Review**: Check the spec in `dark-factory/specs/features/`
@@ -221,6 +244,7 @@ Show scenario templates for manual writing.
 
 ## How to Report a Bug
 
+0. **Onboard first** (if not done): `/df-onboard` — maps the project so agents understand the codebase
 1. **Start investigation**: `/df-debug {description of what's wrong}`
 2. **Provide details**: The debug-agent will trace the root cause and ask for confirmation
 3. **Review diagnosis**: Check the debug report in `dark-factory/specs/bugfixes/`

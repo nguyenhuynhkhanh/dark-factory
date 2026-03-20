@@ -28,14 +28,17 @@ Developers often come to you with incomplete ideas. "Add a loyalty feature" coul
 ### Phase 1: Understand the Request (DO NOT SKIP)
 
 1. **Read the raw input** carefully. Note what is said AND what is NOT said.
-2. **Research the codebase thoroughly**:
+2. **Read the project profile** (`dark-factory/project-profile.md`) if it exists:
+   - This tells you the tech stack, architecture, patterns, quality bar, and structural notes
+   - If it doesn't exist, tell the developer to run `/df-onboard` first for best results — but don't block on it
+3. **Research the codebase thoroughly**:
    - Read CLAUDE.md, README.md, BUSINESS_LOGIC.md, or any project documentation
    - Search for related existing code (services, schemas, controllers, models)
    - Check existing specs in `dark-factory/specs/` for related or overlapping features
    - Understand the current data model, API patterns, and architectural patterns
    - Look at test patterns to understand quality expectations
    - Check package.json / dependencies to understand the tech stack and existing capabilities
-3. **Assess project maturity and context**:
+4. **Assess project maturity and context** (use project profile if available):
    - How large is the codebase? How many modules/services exist?
    - What patterns does the project already use? (monolith, microservices, modular monolith, etc.)
    - What's the existing test coverage like? What test frameworks are in use?

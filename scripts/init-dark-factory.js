@@ -443,6 +443,45 @@ You are the validation agent for the Dark Factory pipeline.
 `;
 }
 
+function getOnboardAgentContent() {
+  return `---
+name: onboard-agent
+description: "Maps an existing project's architecture, conventions, tech stack, quality bar, and structural issues. Produces a project profile that all Dark Factory agents reference."
+tools: Read, Glob, Grep, Bash, Write, AskUserQuestion
+---
+
+# Onboard Agent (Project Cartographer)
+
+You are an engineering lead joining a project for the first time. Your job is to map everything an engineer needs to know to work effectively in this codebase.
+
+**You don't judge. You document reality.** A messy codebase is still a codebase.
+
+## What You Produce
+
+A single file: \`dark-factory/project-profile.md\`
+
+## Your Process
+
+1. **Detect project state**: empty/greenfield or existing code?
+2. **Check for existing profile**: if exists, ask developer whether to refresh
+3. **Map tech stack**: language, runtime, framework, database, dependencies
+4. **Map toolchain**: test framework, linter, build tool, CI/CD, Docker
+5. **Map architecture**: directory structure, module organization, entry points, layers
+6. **Map code patterns**: naming, exports, error handling, validation, auth, logging
+7. **Map data patterns**: ORM, schemas, migrations
+8. **Assess testing**: framework, location, naming, coverage, test commands
+9. **Flag structural realities**: inconsistencies, missing infrastructure, tech debt (facts, not judgments)
+10. **Ask the developer**: user scale, deployment, fragile areas, quality bar (3-5 questions max)
+11. **Write project profile** to \`dark-factory/project-profile.md\`
+
+## Constraints
+- NEVER modify source code or test files
+- ONLY write to \`dark-factory/project-profile.md\`
+- Document reality without judgment
+- If greenfield: note it honestly, ask about intended stack
+`;
+}
+
 function getArchitectAgentContent() {
   return `---
 name: architect-agent
@@ -903,6 +942,26 @@ Additional context for the test runner.
 - Backward compatibility — existing API consumers don't break
 - For bugfixes: exact reproduction case + variations
 `,
+    "df-onboard": `---
+name: df-onboard
+description: "Map an existing project's architecture, conventions, and quality bar. Produces a project profile that all Dark Factory agents reference."
+---
+
+# Dark Factory — Project Onboarding
+
+## Trigger
+\\\`/df-onboard\\\`
+
+## Process
+1. Spawn an **independent** onboard-agent (\\\`.claude/agents/onboard-agent.md\\\`)
+2. The agent maps the project and writes \\\`dark-factory/project-profile.md\\\`
+3. Report key findings: tech stack, architecture, quality bar, structural notes
+
+## When to Use
+- First time using Dark Factory on a project
+- After significant project changes
+- When agents seem confused about conventions
+`,
     "df-debug": `---
 name: df-debug
 description: "Start Dark Factory bug investigation. Spawns an independent debug-agent for forensic root cause analysis, impact assessment, and debug report writing."
@@ -969,6 +1028,7 @@ function getClaudeMdSection() {
 This project uses the Dark Factory pattern for feature development and bug fixes.
 
 ### Available Commands
+- \`/df-onboard\` — Map the project. Produces \`dark-factory/project-profile.md\`. **Run first on any existing project.**
 - \`/df-intake {description}\` — Start **feature** spec creation. Spawns an independent BA agent.
 - \`/df-debug {description}\` — Start **bug** investigation. Spawns an independent debug-agent for forensic root cause analysis.
 - \`/df-orchestrate {name}\` — Start implementation. Auto-detects feature vs. bugfix mode.
@@ -1152,6 +1212,10 @@ function main() {
     getDebugAgentContent()
   );
   writeFile(
+    path.join(dir, ".claude", "agents", "onboard-agent.md"),
+    getOnboardAgentContent()
+  );
+  writeFile(
     path.join(dir, ".claude", "agents", "architect-agent.md"),
     getArchitectAgentContent()
   );
@@ -1162,7 +1226,7 @@ function main() {
 
   // 3. Create skill files
   console.log("\nCreating skills...");
-  for (const skill of ["df-intake", "df-debug", "df-orchestrate", "df-spec", "df-scenario", "df-cleanup"]) {
+  for (const skill of ["df-onboard", "df-intake", "df-debug", "df-orchestrate", "df-spec", "df-scenario", "df-cleanup"]) {
     writeFile(
       path.join(dir, ".claude", "skills", skill, "SKILL.md"),
       getSkillContent(skill)
