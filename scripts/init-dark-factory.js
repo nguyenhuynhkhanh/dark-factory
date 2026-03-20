@@ -1070,6 +1070,12 @@ This project uses the Dark Factory pattern for feature development and bug fixes
 - \`dark-factory/results/{name}/\` — Test output (gitignored)
 - \`dark-factory/archive/{name}/\` — Archived specs + scenarios (post-completion)
 - \`dark-factory/manifest.json\` — Feature lifecycle manifest
+- \`dark-factory/project-profile.md\` — Project architecture, conventions, and quality bar (from \`/df-onboard\`)
+
+### Onboarding (run once per project)
+\`/df-onboard\` → onboard-agent maps the codebase → produces \`dark-factory/project-profile.md\` → all agents reference it
+
+**IMPORTANT**: If \`dark-factory/project-profile.md\` does not exist, prompt the user to run \`/df-onboard\` before proceeding with \`/df-intake\` or \`/df-debug\`.
 `;
 }
 
@@ -1255,9 +1261,10 @@ function main() {
 
   console.log(`\nDone! Dark Factory is ready.`);
   console.log(`\nNext steps:`);
-  console.log(`  1. Use /df-intake {description} to create your first spec`);
-  console.log(`  2. Review holdout scenarios after intake`);
-  console.log(`  3. Use /df-orchestrate {name} to implement\n`);
+  console.log(`  1. Run /df-onboard to map your project (architecture, conventions, quality bar)`);
+  console.log(`  2. Use /df-intake {description} to create your first spec`);
+  console.log(`  3. Review holdout scenarios after intake`);
+  console.log(`  4. Use /df-orchestrate {name} to implement\n`);
 }
 
 main();
