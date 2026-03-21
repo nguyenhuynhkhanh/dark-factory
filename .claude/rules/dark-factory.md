@@ -6,7 +6,7 @@ This project uses the Dark Factory pattern for feature development and bug fixes
 - **`/df {description}`** — **Just describe what you need.** Auto-detects bug vs feature and routes to the right pipeline. Asks you to confirm if ambiguous.
 - `/df-onboard` — Map the project. Produces `dark-factory/project-profile.md` with architecture, conventions, quality bar. **Run this first on any existing project.**
 - `/df-intake {description}` — Start **feature** spec creation. Spawns an independent BA agent to research, brainstorm, and write specs + scenarios.
-- `/df-debug {description}` — Start **bug** investigation. Spawns an independent debug-agent for forensic root cause analysis, impact assessment, and debug report writing.
+- `/df-debug {description}` — Start **bug** investigation. Spawns 3 parallel debug-agents investigating from different angles (code path, history, patterns), synthesizes findings, then writes the report.
 - `/df-orchestrate {name}` — Start implementation. Auto-detects feature vs. bugfix mode. Auto-promotes holdout tests and archives on success.
 - `/df-cleanup` — Recovery/maintenance. Retries stuck promotions, completes archival, lists stale features.
 - `/df-spec` — Show spec templates for manual writing.
@@ -24,7 +24,7 @@ This project uses the Dark Factory pattern for feature development and bug fixes
 6. **Archive**: Specs and scenarios are moved to `dark-factory/archive/{name}/`
 
 ## Bugfix Pipeline
-1. **Investigation** (`/df-debug`): Developer reports bug → debug-agent traces root cause, assesses impact, writes debug report + scenarios → DONE
+1. **Investigation** (`/df-debug`): Developer reports bug → 3 debug-agents investigate in parallel (code path, history, patterns) → orchestrator synthesizes findings → developer confirms → report + scenarios written → DONE
 2. **Review**: Lead reviews diagnosis, holdout scenarios
 3. **Architect review** (`/df-orchestrate`): Principal engineer reviews fix approach, blast radius, systemic patterns → 3+ rounds with debug-agent → APPROVED or BLOCKED
 4. **Red-Green Fix**: Code-agent writes failing test (proves bug) → implements minimal fix (no test changes) → test passes → holdout validation
