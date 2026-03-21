@@ -36,6 +36,7 @@ temp/
 # Claude Code — selectively track agents and skills
 /.claude/*
 !/.claude/agents/
+!/.claude/rules/
 !/.claude/skills/
 
 # Dark Factory results (local test output)
