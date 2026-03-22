@@ -1,0 +1,12 @@
+{
+  "name": "dark-factory",
+  "description": "AI-powered development pipeline for Claude Code — specs in, production-grade features out",
+  "version": "0.2.0",
+  "author": {
+    "name": "Dark Factory",
+    "url": "https://github.com/nguyenhuynhkhanh/dark-factory"
+  },
+  "repository": "https://github.com/nguyenhuynhkhanh/dark-factory",
+  "license": "MIT",
+  "keywords": ["dark-factory", "agents", "pipeline", "testing"]
+}

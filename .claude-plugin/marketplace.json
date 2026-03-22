@@ -1,0 +1,25 @@
+{
+  "name": "dark-factory-marketplace",
+  "owner": {
+    "name": "Dark Factory",
+    "url": "https://github.com/nguyenhuynhkhanh/dark-factory"
+  },
+  "metadata": {
+    "description": "Official Dark Factory plugins for production-grade AI-powered development",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "dark-factory",
+      "source": "./plugins/dark-factory",
+      "description": "AI-powered development pipeline — specs in, production-grade features out. 7 specialized agents, 8 slash commands, auto-detection rules.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Dark Factory"
+      },
+      "repository": "https://github.com/nguyenhuynhkhanh/dark-factory",
+      "license": "MIT",
+      "keywords": ["dark-factory", "agents", "specs", "testing", "pipeline", "claude-code"]
+    }
+  ]
+}
