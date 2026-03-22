@@ -28,23 +28,17 @@ Dark Factory is an open-source multi-agent framework for Claude Code. Feed it a 
 
 **Prerequisites**: [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed + Node.js 18+
 
-### For AI
-
-Open Claude Code in your project and say:
-
-```
-Install Dark Factory from https://github.com/nguyenhuynhkhanh/dark-factory into this project, then onboard it.
-```
-
-One prompt. Done.
-
-### For humans
-
 ```bash
-curl -sL https://raw.githubusercontent.com/nguyenhuynhkhanh/dark-factory/main/scripts/init-dark-factory.js | node - --dir .
+npx dark-factory init
 ```
 
 Then open Claude Code and run `/df-onboard` to map your project.
+
+To update to the latest version later:
+
+```bash
+npx dark-factory update
+```
 
 ---
 

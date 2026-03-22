@@ -1,0 +1,28 @@
+{
+  "name": "dark-factory",
+  "version": "0.1.0",
+  "description": "AI-powered development pipeline for Claude Code — specs in, production-grade features out",
+  "bin": {
+    "dark-factory": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "template/"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "development",
+    "pipeline",
+    "agents",
+    "spec",
+    "testing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nguyenhuynhkhanh/dark-factory.git"
+  }
+}
