@@ -2,6 +2,35 @@
 
 This project uses the Dark Factory pattern for feature development and bug fixes.
 
+## Auto-Detection (IMPORTANT — read this first)
+
+**When a developer sends a message that describes a bug or a feature request, ALWAYS invoke the `/df` skill automatically.** Do NOT wait for them to type `/df` — most developers will just paste a description directly. You must proactively detect and route it.
+
+**Trigger `/df` when the message:**
+- Describes something broken, wrong, or erroring (bug)
+- Requests new functionality or changes to existing behavior (feature)
+- Pastes an error message, stack trace, or log output (bug)
+- Describes a user story, requirement, or product need (feature)
+- References a ticket, issue, or task to implement (feature or bug)
+
+**Do NOT trigger `/df` when the message:**
+- Is a question about the codebase ("how does X work?", "where is Y defined?")
+- Is a small, direct code change ("rename this variable", "add a log line here")
+- Is about Dark Factory itself ("show me the manifest", "what's the status of X")
+- Is a general conversation, greeting, or config request
+- Is explicitly using another `/df-*` command already
+
+**Conversations that evolve into implementation:**
+Developers often start with a question or exploration ("how does auth work?", "why is this slow?"), then through discussion arrive at a concrete solution or decision to build something. **Watch for the transition moment** — when the conversation shifts from understanding to action:
+- "OK let's do that" / "let's implement this" / "go ahead and build it"
+- "so the fix would be..." / "we should change X to Y"
+- "can you make that change?" / "let's go with option B"
+- You and the developer agree on an approach and the next natural step is writing code
+
+At that moment, trigger `/df` with a summary of what was discussed and decided. Tell the developer: "We've landed on a concrete plan — let me route this through Dark Factory so we get a proper spec, scenarios, and validation." Pass the full context of what was agreed (the problem, the decided approach, any constraints discussed).
+
+When in doubt, ask: "Would you like me to run this through the Dark Factory pipeline?"
+
 ## Available Commands
 - **`/df {description}`** — **Just describe what you need.** Auto-detects bug vs feature and routes to the right pipeline. Asks you to confirm if ambiguous.
 - `/df-onboard` — Map the project. Produces `dark-factory/project-profile.md` with architecture, conventions, quality bar. **Run this first on any existing project.**
