@@ -135,12 +135,26 @@ Update `dark-factory/manifest.json`:
   ```
 - Write the updated manifest back
 
-### Step 6: Report
+### Step 6: Present holdout scenarios for review
+
+After the spec and scenarios are written, **show the holdout scenarios directly to the developer** for review. Do NOT just tell them to go read files — display the content inline:
+
+1. Read each holdout scenario file from `dark-factory/scenarios/holdout/{name}/`
+2. Present them in a clear summary format:
+   - Scenario name, type, priority
+   - Brief description of what it tests
+   - The key assertion / expected outcome
+3. Ask the developer:
+   > Here are the holdout scenarios (these are hidden from the code-agent during implementation). Do they look good?
+   > - **Proceed** — start implementation with `/df-orchestrate {name}`
+   > - **Adjust** — tell me what to change and I'll update the scenarios
+4. If the developer says proceed, **invoke `/df-orchestrate {name}` automatically** — don't make them type it
+5. If the developer wants adjustments, update the scenarios and re-present
+
+### Step 7: Report summary
 - Spec file path
-- Public scenarios created
-- Holdout scenarios created
+- Number of public and holdout scenarios created
 - Implementation size estimate and suggested parallel tracks
-- Remind the lead to review holdout scenarios before running `/df-orchestrate`
 
 ## Important
 - All 3 leads MUST be spawned in PARALLEL (single message, 3 Agent tool calls)

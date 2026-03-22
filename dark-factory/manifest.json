@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "features": {}
+  "features": {
+    "pipeline-velocity": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/pipeline-velocity.spec.md",
+      "created": "2026-03-22T03:45:00.000Z",
+      "rounds": 0
+    }
+  }
 }

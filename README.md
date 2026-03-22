@@ -2,7 +2,7 @@
 
 **Specs in, production-grade features out.**
 
-Dark Factory is an open-source multi-agent framework for Claude Code. Feed it a raw idea or a bug report — it assembles a team of AI specialists (BA, principal engineer, developer, QA) who research, challenge, implement, and validate autonomously. No agent can cut corners because no agent has the full picture.
+Dark Factory is an open-source multi-agent framework for Claude Code. Just describe what you need — it assembles a team of AI specialists who research, challenge, implement, and validate autonomously. No agent can cut corners because no agent has the full picture.
 
 > Inspired by [The Dark Factory Pattern](https://hackernoon.com/the-dark-factory-pattern-moving-from-ai-assisted-to-fully-autonomous-coding) — moving from AI-assisted to fully autonomous coding.
 
@@ -10,15 +10,21 @@ Dark Factory is an open-source multi-agent framework for Claude Code. Feed it a 
                           ┌─────────────┐
   /df-onboard      ──────▶│   Onboard   │──▶ project-profile.md
                           └─────────────┘
-                          ┌─────────────┐     ┌───────────────┐
-  /df-intake       ──────▶│  Spec Agent │────▶│   Architect   │──▶ APPROVED
-                          │  (BA)       │◀────│  (Principal)  │    │
-                          └─────────────┘  3+ │   3+ rounds   │    │
-                                           rounds └──────────────┘    ▼
-                          ┌─────────────┐     ┌─────────────┐   ┌──────────┐
-                          │ Code Agent  │────▶│ Test Agent  │──▶│ Promote  │──▶ Archive
-                          │ (Dev)       │◀────│ (QA)        │   │ + Archive│
-                          └─────────────┘  max└─────────────┘   └──────────┘
+
+                          ┌─────────────────────────┐
+  Just describe     ──────▶│  3 Spec/Debug Leads     │──▶ synthesized spec
+  what you need           │  (parallel perspectives) │
+                          └─────────────────────────┘
+                                    │
+                          ┌─────────────────────────┐
+                          │  Architect Review        │──▶ APPROVED
+                          │  (tiered by scope size)  │
+                          └─────────────────────────┘
+                                    │
+                          ┌─────────────┐     ┌─────────────┐
+                          │ Code Agents │────▶│ Test Agent  │──▶ Promote → Archive
+                          │ (1-4, auto) │◀────│ (unit + e2e)│
+                          └─────────────┘  max└─────────────┘
                                            3 rounds
 ```
 
@@ -32,7 +38,13 @@ Dark Factory is an open-source multi-agent framework for Claude Code. Feed it a 
 npx dark-factory init
 ```
 
-Then open Claude Code and run `/df-onboard` to map your project.
+Then open Claude Code in your project:
+
+```
+/df-onboard
+```
+
+That's it. Now just describe what you need — Dark Factory activates automatically.
 
 To update to the latest version later:
 
@@ -44,46 +56,46 @@ npx dark-factory update
 
 ## Usage
 
-### 1. Onboard your project (once)
+### Just describe what you need
+
+You don't need to remember any commands. Just tell Claude Code what you want:
 
 ```
-/df-onboard
+I need an API endpoint that lets users export their data as CSV
 ```
 
-Maps your tech stack, architecture, conventions, and quality bar into `dark-factory/project-profile.md`. Every agent reads this before starting work.
+Dark Factory auto-detects this is a feature and routes it through the pipeline. If it's a bug report, it routes to the debug pipeline instead. If it can't tell, it asks.
 
-### 2. Add a feature
+You can also start with a question — "how does the auth system work?" — and when the conversation evolves into a concrete plan, Dark Factory activates at that moment.
 
-```
-/df-intake I need an API endpoint that lets users export their data as CSV
-```
+### What happens next
 
-1. **Spec-agent** researches the codebase, asks focused questions, proposes scope (IN/OUT), writes spec + scenarios
-2. You review holdout scenarios in `dark-factory/scenarios/holdout/`
-3. `/df-orchestrate user-csv-export` — architect reviews (3+ rounds), code-agent implements, test-agent validates
-4. On success: holdout tests promoted into your permanent test suite, artifacts archived
+**For features:**
+1. **3 spec leads** research in parallel (user/product, architecture, reliability perspectives)
+2. Findings are synthesized → you confirm scope → spec + scenarios written
+3. Holdout scenarios shown inline for your review
+4. Architect review (tiered by scope size)
+5. Code-agents implement (1-4 in parallel, auto-scaled) → test-agent validates (unit + Playwright e2e)
+6. On success: holdout tests promoted into your permanent test suite, artifacts archived
 
-### 3. Fix a bug
-
-```
-/df-debug Users get 500 errors when exporting CSV with special characters in the filename
-```
-
-1. **Debug-agent** traces root cause (not just the symptom), maps impact, writes debug report
-2. You confirm the diagnosis
-3. `/df-orchestrate csv-special-chars-fix` — architect reviews, then strict red-green cycle:
-   - Write a failing test that **proves** the bug (no source code changes)
-   - Implement the minimal fix (no test changes)
-   - Failing test now passes, all existing tests still pass
+**For bugs:**
+1. **3 investigators** research in parallel (code path tracer, history detective, pattern analyst)
+2. Findings synthesized → you confirm diagnosis → debug report + scenarios written
+3. Strict red-green cycle: failing test first (proves bug), then minimal fix (no test changes)
 4. Holdout validation, promote, archive
 
-### 4. Maintenance
+### Explicit commands (optional)
 
-```
-/df-cleanup
-```
-
-Retries stuck promotions, completes archival, lists stale features.
+| Command | What it does |
+|---------|-------------|
+| `/df {description}` | Auto-detect bug vs feature, route to right pipeline |
+| `/df-onboard` | Map project architecture, conventions, quality bar |
+| `/df-intake {desc}` | Create feature spec (3 parallel leads, synthesized) |
+| `/df-debug {desc}` | Investigate bug (3 parallel investigators, synthesized) |
+| `/df-orchestrate {name}` | Implement (architect review → code → test → promote → archive) |
+| `/df-cleanup` | Recover stuck features, list stale work |
+| `/df-spec` | Show spec templates for manual writing |
+| `/df-scenario` | Show scenario templates for manual writing |
 
 ---
 
@@ -95,12 +107,12 @@ Dark Factory separates concerns into independent agents with strict information 
 
 | What goes wrong without it | How Dark Factory prevents it |
 |---|---|
-| AI guesses the scope instead of asking | Spec-agent runs structured discovery — asks focused questions, proposes IN/OUT scope, waits for confirmation |
-| AI skips architecture review | Architect-agent reviews every spec for security, performance, data integrity — 3+ rounds before any code |
-| AI writes tests that match its own implementation | Test-agent uses **holdout scenarios** the code-agent has never seen — can't teach to the test |
-| Bug fixes that mask symptoms | Debug-agent traces root cause forensically; code-agent must write a failing test FIRST, then fix WITHOUT changing the test |
+| AI guesses the scope instead of asking | 3 spec-agents research from different perspectives — user, architecture, reliability |
+| AI skips architecture review | Architect-agent reviews every spec (tiered by scope — small skips, large gets full parallel review) |
+| AI writes tests that match its own implementation | Test-agent uses **holdout scenarios** the code-agent has never seen |
+| Bug fixes that mask symptoms | 3 debug-agents investigate from different angles; strict red-green cycle prevents symptom-masking |
 | AI doesn't understand the existing codebase | Onboard-agent maps architecture, conventions, and quality bar before any work begins |
-| Specs and test artifacts pile up forever | Auto-promote holdout tests into permanent suite, then archive artifacts |
+| Small changes get stuck in heavy process | Scope-based fast track — small changes skip architect review, test-agent is the safety net |
 
 ---
 
@@ -108,15 +120,15 @@ Dark Factory separates concerns into independent agents with strict information 
 
 ### The 7 Agents
 
-| Agent | Role | Analogy |
-|-------|------|---------|
-| **Onboard** | Maps the project before any work begins | New team lead's first week |
-| **Spec** | Discovers scope, challenges assumptions, writes specs | Senior BA who asks hard questions |
-| **Debug** | Forensic root cause analysis, impact assessment | The engineer who reads stack traces for breakfast |
-| **Architect** | Reviews specs for architecture, security, performance | Principal engineer who blocks bad designs |
-| **Code** | Implements features and fixes | Senior dev who follows the spec exactly |
-| **Test** | Validates with hidden scenarios | QA who writes tests the dev has never seen |
-| **Promote** | Moves holdout tests into permanent test suite | Release engineer |
+| Agent | Role | How it works |
+|-------|------|-------------|
+| **Onboard** | Maps the project before any work begins | Analyzes codebase → produces project profile |
+| **Spec** (x3) | Discovers scope, challenges assumptions, writes specs | 3 parallel leads: user/product, architecture, reliability |
+| **Debug** (x3) | Forensic root cause analysis, impact assessment | 3 parallel investigators: code path, history, patterns |
+| **Architect** | Reviews specs for architecture, security, performance | Tiered: skip for small, single round for medium, parallel domains for large |
+| **Code** (x1-4) | Implements features and fixes | Auto-scaled by spec size with strict file boundaries |
+| **Test** | Validates with hidden scenarios | Unit tests + Playwright e2e (auto-detected) |
+| **Promote** | Moves holdout tests into permanent test suite | Adapts both unit and e2e tests to project conventions |
 
 ### Information Barriers
 
@@ -153,7 +165,7 @@ The code-agent can't "teach to the test" because it never sees the holdout scena
 
 ### Red-Green Cycle (Bugfixes)
 
-Dark Factory enforces strict discipline that prevents the most common AI failure mode: fixing the symptom instead of the root cause.
+Strict discipline that prevents the most common AI failure mode: fixing the symptom instead of the root cause.
 
 ```
 Phase 1 (Red):   Write test   →  Test FAILS  ✓  (bug is real)
@@ -163,8 +175,6 @@ Phase 2 (Green): Implement fix →  Test PASSES ✓  (fix works)
                  ⚠ Zero test file changes allowed
                  ⚠ All existing tests must still pass
 ```
-
-If the test doesn't fail in Phase 1, the test is wrong — not the bug. If existing tests break in Phase 2, the fix has regression — revise the fix, not the tests.
 
 ### Feature Lifecycle
 
@@ -183,21 +193,7 @@ active → passed → promoted → archived
 
 ---
 
-## Reference
-
-### Commands
-
-| Command | What it does |
-|---------|-------------|
-| `/df-onboard` | Map project architecture, conventions, quality bar |
-| `/df-intake {desc}` | Create feature spec (discovers scope, writes scenarios) |
-| `/df-debug {desc}` | Investigate bug (root cause, impact, debug report) |
-| `/df-orchestrate {name}` | Implement (architect review → code → test → promote → archive) |
-| `/df-cleanup` | Recover stuck features, list stale work |
-| `/df-spec` | Show spec templates for manual writing |
-| `/df-scenario` | Show scenario templates for manual writing |
-
-### Project Structure
+## Project Structure
 
 ```
 your-project/
@@ -210,7 +206,10 @@ your-project/
 │   │   ├── code-agent.md
 │   │   ├── test-agent.md
 │   │   └── promote-agent.md
-│   └── skills/                    # 7 slash commands
+│   ├── rules/                     # Auto-detection & pipeline rules
+│   │   └── dark-factory.md
+│   └── skills/                    # 8 slash commands
+│       ├── df/SKILL.md            # Unified entry (auto-routes)
 │       ├── df-onboard/SKILL.md
 │       ├── df-intake/SKILL.md
 │       ├── df-debug/SKILL.md
@@ -227,38 +226,28 @@ your-project/
 │   ├── scenarios/holdout/         # Hidden from code-agent
 │   ├── results/                   # Test output (gitignored)
 │   └── archive/                   # Completed feature artifacts
-└── CLAUDE.md                      # Project instructions (auto-updated)
+└── CLAUDE.md                      # Your project instructions (untouched)
 ```
-
-### Configuration
-
-The init script auto-detects your project type:
-
-```bash
-# Force a project type
-node scripts/init-dark-factory.js --dir . --project-type nestjs
-node scripts/init-dark-factory.js --dir . --project-type node
-node scripts/init-dark-factory.js --dir . --project-type generic
-
-# Scaffold a first feature
-node scripts/init-dark-factory.js --dir . --feature user-auth
-```
-
-Supported project types affect agent prompts (e.g., NestJS agents know about modules, decorators, and DTOs).
 
 ---
 
 ## Design Decisions
 
-**Why holdout scenarios?** — Without them, the AI writes code and tests from the same understanding. Holdout scenarios are written by the spec-agent (who understands the requirements) and validated by the test-agent (who never talks to the code-agent). The code-agent must implement correctly to pass tests it's never seen.
+**Why 3 parallel leads/investigators?** — A single agent has blind spots. Three agents with different lenses (user, architecture, reliability for features; code path, history, patterns for bugs) catch more issues and produce a more complete spec.
 
-**Why architect review?** — A spec written by a BA may miss performance concerns, security gaps, or architectural inconsistencies. The architect-agent reviews every spec with principal-engineer rigor — but is banned from seeing tests, so it can't influence what gets tested.
+**Why holdout scenarios?** — Without them, the AI writes code and tests from the same understanding. Holdout scenarios are written by the spec-agent and validated by the test-agent. The code-agent must implement correctly to pass tests it's never seen.
 
-**Why strict red-green for bugs?** — The most dangerous AI bug fix is one that makes the test pass by changing the test. Dark Factory enforces: write the test first (Phase 1, no code changes allowed), then fix the code (Phase 2, no test changes allowed). If the test doesn't fail, the test is wrong.
+**Why tiered architect review?** — A one-file change doesn't need the same scrutiny as a 10-file architectural overhaul. Small changes skip review (test-agent is the safety net), medium gets one round, large gets full parallel domain review.
 
-**Why project onboarding?** — An AI dropped into an unknown codebase will follow "best practices" instead of "this project's practices." The onboard-agent maps reality — messy or clean — so every agent works WITH the existing patterns instead of against them.
+**Why auto-scaled code-agents?** — A large spec with independent tracks can be implemented faster with multiple agents working in parallel, each with strict file boundaries to prevent conflicts.
 
-**Why auto-promote and archive?** — Dark Factory artifacts (specs, scenarios) accumulate forever. After holdout tests pass, they're automatically promoted into the permanent test suite (preserving regression coverage) and artifacts are archived.
+**Why unit + Playwright?** — The test-agent auto-detects available test infrastructure and classifies each scenario as unit test, e2e test, or both. If Playwright isn't installed, it suggests it for UI scenarios but doesn't block.
+
+**Why strict red-green for bugs?** — The most dangerous AI bug fix changes the test to match the broken behavior. Dark Factory enforces: write the test first (no code changes), then fix the code (no test changes).
+
+**Why `.claude/rules/` instead of CLAUDE.md?** — Dark Factory instructions load automatically from `.claude/rules/dark-factory.md` without touching your project's `CLAUDE.md`. Your project settings stay clean.
+
+**Why `npx` instead of cloning?** — `npx dark-factory init` copies template files into your project. `npx dark-factory update` refreshes agents/skills/rules without touching your specs or scenarios. No git submodules, no manual copying.
 
 ---
 
@@ -267,7 +256,6 @@ Supported project types affect agent prompts (e.g., NestJS agents know about mod
 Contributions welcome. The test suite is the source of truth — if the tests pass, the pipeline is intact.
 
 ```bash
-# Run all tests (no dependencies — uses Node.js built-in test runner)
 node --test tests/dark-factory-setup.test.js
 ```
 
