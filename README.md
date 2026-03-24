@@ -79,13 +79,13 @@ You can also start with a question — "how does the auth system work?" — and 
 3. Holdout scenarios shown inline for your review
 4. Architect review (tiered by scope size)
 5. Code-agents implement (1-4 in parallel, auto-scaled) → test-agent validates (unit + Playwright e2e)
-6. On success: holdout tests promoted into your permanent test suite, artifacts archived
+6. On success: holdout tests promoted into your permanent test suite, artifacts cleaned up (git history is the archive)
 
 **For bugs:**
 1. **3 investigators** research in parallel (code path tracer, history detective, pattern analyst)
 2. Findings synthesized → you confirm diagnosis → debug report + scenarios written
 3. Strict red-green cycle: failing test first (proves bug), then minimal fix (no test changes)
-4. Holdout validation, promote, archive
+4. Holdout validation, promote tests, cleanup artifacts
 
 ### Explicit commands (optional)
 
@@ -181,18 +181,18 @@ Phase 2 (Green): Implement fix →  Test PASSES ✓  (fix works)
 
 ### Feature Lifecycle
 
-Every feature is tracked in `dark-factory/manifest.json`:
+Every feature is tracked in `dark-factory/manifest.json` while active:
 
 ```
-active → passed → promoted → archived
+active → passed → promoted → cleaned up
   │         │         │          │
-  │         │         │          └── Specs + scenarios in dark-factory/archive/
+  │         │         │          └── Artifacts committed to git, then deleted
   │         │         └── Holdout tests in permanent test suite
   │         └── All holdout tests passed
   └── Spec created, awaiting implementation
 ```
 
-`/df-cleanup` recovers features stuck in intermediate states.
+Completed features are removed from the manifest — it only tracks in-progress work. All artifacts are in git history if you ever need them. `/df-cleanup` recovers features stuck in intermediate states.
 
 ---
 
@@ -227,8 +227,7 @@ your-project/
 │   ├── specs/bugfixes/            # Debug reports
 │   ├── scenarios/public/          # Visible to code-agent
 │   ├── scenarios/holdout/         # Hidden from code-agent
-│   ├── results/                   # Test output (gitignored)
-│   └── archive/                   # Completed feature artifacts
+│   └── results/                   # Test output (gitignored)
 └── CLAUDE.md                      # Your project instructions (untouched)
 ```
 

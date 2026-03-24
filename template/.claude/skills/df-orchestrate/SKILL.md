@@ -179,13 +179,20 @@ When all holdout tests pass:
   - Update manifest: set status to `"passed"` (do NOT archive)
   - Report failure to developer and STOP — do not proceed to Step 5
 
-**Step 5: Archive**
-- Move spec file to `dark-factory/archive/{name}/spec.md`
-- Move `dark-factory/scenarios/public/{name}/` to `dark-factory/archive/{name}/scenarios/public/`
-- Move `dark-factory/scenarios/holdout/{name}/` to `dark-factory/archive/{name}/scenarios/holdout/`
-- Delete `dark-factory/results/{name}/` (results are gitignored, no need to archive)
-- Update manifest: set status to `"archived"`, record `"archived"` timestamp
-- Report: archived feature, promoted test path
+**Step 5: Cleanup (replaces archive)**
+
+Tests are promoted. Specs and scenarios are in git history. No need to keep files around.
+
+- **Commit first**: Before deleting, ensure all spec and scenario files are committed to git. Run `git status` to check. If there are uncommitted changes in the feature's files, commit them with message: "Archive {name}: spec + scenarios (promoted to permanent tests)"
+- **Delete all feature artifacts**:
+  - Delete `dark-factory/specs/features/{name}.spec.md` (or `bugfixes/{name}.spec.md`)
+  - Delete `dark-factory/specs/features/{name}.review.md` (and any domain review files)
+  - Delete `dark-factory/scenarios/public/{name}/` directory
+  - Delete `dark-factory/scenarios/holdout/{name}/` directory
+  - Delete `dark-factory/results/{name}/` directory
+- **Remove from manifest**: Remove the feature entry from `dark-factory/manifest.json` entirely (don't let it grow forever)
+- **Commit the deletion**: `git add -A dark-factory/ && git commit -m "Cleanup {name}: artifacts deleted, tests promoted"`
+- Report: promoted test path, all artifacts cleaned up
 
 ## Information Barrier Rules
 - NEVER pass holdout scenario content to the code-agent

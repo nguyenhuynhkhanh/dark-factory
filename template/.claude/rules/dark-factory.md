@@ -50,14 +50,14 @@ When in doubt, ask: "Would you like me to run this through the Dark Factory pipe
 3. **Architect review** (`/df-orchestrate`): Principal engineer reviews spec for architecture, security, performance, production-readiness → 3+ rounds of refinement with spec-agent → APPROVED or BLOCKED
 4. **Implementation**: Parallel code-agents implement (scaled by spec size) → test-agent validates with holdout → iterate (max 3 rounds)
 5. **Promote**: On success, holdout tests are automatically promoted into the permanent test suite
-6. **Archive**: Specs and scenarios are moved to `dark-factory/archive/{name}/`
+6. **Cleanup**: All artifacts committed to git then deleted — git history is the archive
 
 ## Bugfix Pipeline
 1. **Investigation** (`/df-debug`): Developer reports bug → 3 debug-agents investigate in parallel (code path, history, patterns) → orchestrator synthesizes findings → developer confirms → report + scenarios written → DONE
 2. **Review**: Lead reviews diagnosis, holdout scenarios
 3. **Architect review** (`/df-orchestrate`): Principal engineer reviews fix approach, blast radius, systemic patterns → 3+ rounds with debug-agent → APPROVED or BLOCKED
 4. **Red-Green Fix**: Code-agent writes failing test (proves bug) → implements minimal fix (no test changes) → test passes → holdout validation
-5. **Promote + Archive**: Same as feature pipeline
+5. **Promote + Cleanup**: Same as feature pipeline
 
 ## Rules
 - Spec creation and implementation are FULLY DECOUPLED — never auto-triggered
@@ -69,15 +69,15 @@ When in doubt, ask: "Would you like me to run this through the Dark Factory pipe
 - Architect-agent communicates with spec/debug agents ONLY about the spec — never about tests
 
 ## Lifecycle Tracking
-- `dark-factory/manifest.json` tracks feature status: active → passed → promoted → archived
-- Status transitions are managed by df-intake and df-orchestrate
+- `dark-factory/manifest.json` tracks active features only — completed entries are removed after cleanup
+- All artifacts are committed to git before deletion — git history is the permanent archive
+- Status transitions: active → passed → promoted → cleaned up (removed from manifest)
 
 ## Directory
-- `dark-factory/specs/features/` — Feature specs
-- `dark-factory/specs/bugfixes/` — Bug report specs
-- `dark-factory/scenarios/public/{name}/` — Scenarios visible to code-agent
-- `dark-factory/scenarios/holdout/{name}/` — Hidden scenarios for validation
+- `dark-factory/specs/features/` — Feature specs (temporary, deleted after promotion)
+- `dark-factory/specs/bugfixes/` — Bug report specs (temporary, deleted after promotion)
+- `dark-factory/scenarios/public/{name}/` — Scenarios visible to code-agent (temporary)
+- `dark-factory/scenarios/holdout/{name}/` — Hidden scenarios for validation (temporary)
 - `dark-factory/results/{name}/` — Test output (gitignored)
-- `dark-factory/archive/{name}/` — Archived specs + scenarios (post-completion)
-- `dark-factory/manifest.json` — Feature lifecycle manifest
+- `dark-factory/manifest.json` — Active feature tracking only
 - `dark-factory/project-profile.md` — Project architecture, conventions, and quality bar (from `/df-onboard`)
