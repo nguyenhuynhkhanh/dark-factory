@@ -25,12 +25,13 @@ You are the orchestrator for the implementation phase.
 
 Before spawning any agents, analyze ALL specs to build a dependency graph:
 
-1. Read every spec file provided
-2. For each spec, identify:
+1. **Check the manifest first**: Read `dark-factory/manifest.json` — if specs were created by `/df-intake` decomposition, they already have `"dependencies"` and `"group"` fields that define the ordering. Use these as the primary source of truth.
+2. Read every spec file provided — check the **Dependencies** section for declared dependencies on other specs
+3. For each spec, also identify:
    - **Files it will create or modify** (from the spec's implementation details or your own analysis)
    - **Dependencies on other specs**: Does it reference types, APIs, schemas, or infrastructure from another spec?
    - **Foundation indicators**: Is this spec establishing architecture, data models, shared services, or project scaffolding that others build on?
-3. Build a dependency graph and identify:
+4. Build a dependency graph (manifest declarations take priority, then spec declarations, then your analysis) and identify:
    - **Independent specs**: No file overlap, no dependency on other specs in the batch → can run in parallel worktrees
    - **Foundation specs**: Other specs depend on their output (e.g., project init, shared data model, core service) → must complete first
    - **Dependent specs**: Require a foundation spec to complete before they can start → run sequentially after their dependency

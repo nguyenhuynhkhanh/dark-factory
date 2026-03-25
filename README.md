@@ -75,11 +75,12 @@ You can also start with a question — "how does the auth system work?" — and 
 
 **For features:**
 1. **3 spec leads** research in parallel (user/product, architecture, reliability perspectives)
-2. Findings are synthesized → you confirm scope → spec + scenarios written
-3. Holdout scenarios shown inline for your review
-4. Architect review (tiered by scope size)
-5. Code-agents implement (1-4 in parallel, auto-scaled) → test-agent validates (unit + Playwright e2e)
-6. On success: holdout tests promoted into your permanent test suite, artifacts cleaned up (git history is the archive)
+2. Findings are synthesized → you confirm scope
+3. **Smart decomposition**: large features are automatically split into smaller, independent specs with declared dependencies — you confirm the split
+4. Spec(s) + scenarios written → holdout scenarios shown inline for your review
+5. Architect review (tiered by scope size)
+6. Implementation in parallel worktrees: each spec gets its own worktree, with up to 4 code-agents per spec → test-agent validates
+7. On success: holdout tests promoted into your permanent test suite, artifacts cleaned up (git history is the archive)
 
 **For bugs:**
 1. **3 investigators** research in parallel (code path tracer, history detective, pattern analyst)

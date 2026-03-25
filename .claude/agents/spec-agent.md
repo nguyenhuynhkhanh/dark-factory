@@ -213,6 +213,14 @@ Include migration strategy if modifying existing data.
 
 ## Dependencies
 Other modules/services affected. Breaking changes to existing behavior.
+If this is a sub-spec of a decomposed feature:
+- **Depends on**: list of sub-spec names that must complete before this one
+- **Depended on by**: list of sub-spec names that need this to complete first
+- **Group**: parent feature name
+
+## Implementation Size Estimate
+- **Scope size**: small (1-2 files) | medium (3-5 files) | large (6-10 files) | x-large (10+ files)
+- **Suggested parallel tracks**: how many code-agents and what each implements. ZERO file overlap between tracks.
 
 ## Implementation Notes
 Patterns to follow from the existing codebase. Specific files/modules to extend.
