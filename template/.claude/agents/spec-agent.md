@@ -39,12 +39,12 @@ Developers often come to you with incomplete ideas. "Add a loyalty feature" coul
    - Look at test patterns to understand quality expectations
    - Check package.json / dependencies to understand the tech stack and existing capabilities
 4. **Cross-feature impact analysis** (CRITICAL — do NOT skip):
-   - Identify every shared table, service, and API this feature will touch
-   - Grep the codebase for ALL other code that reads, writes, or deletes from those same tables
+   - Identify every shared resource this feature will touch (data stores, services, APIs, shared modules, config, state, events)
+   - Grep the codebase for ALL other code that reads, writes, or depends on those same resources
    - Read any existing specs in `dark-factory/specs/` that touch the same resources
-   - For each shared resource, document: who else uses it, what they assume about it, and how this feature could break those assumptions
-   - Pay special attention to: DELETE operations on tables with FK children, status fields that other features filter on, shared functions whose behavior this feature changes
-   - If this feature changes data visibility (e.g., filters a query that other features rely on returning all records), flag it as a cross-feature risk
+   - For each shared resource, document: who else uses it, what they assume about its behavior, and how this feature could break those assumptions
+   - Pay special attention to: operations that change visibility or shape of shared data, behavioral changes to shared functions/endpoints, operations that create/delete resources other features depend on
+   - If this feature silently changes the contract of any shared resource (e.g., adds filtering to a query that others expect unfiltered, changes a return type, alters event timing), flag it as a cross-feature risk
 4. **Assess project maturity and context** (use project profile if available):
    - How large is the codebase? How many modules/services exist?
    - What patterns does the project already use? (monolith, microservices, modular monolith, etc.)
@@ -157,10 +157,9 @@ Scenarios are the real quality gate. They must cover what actually happens in pr
 - [ ] Data integrity — does a failure leave data in a consistent state?
 - [ ] Backward compatibility — do existing API consumers break?
 - [ ] Performance-relevant paths — large dataset, paginated results, N+1 queries
-- [ ] **Cross-feature lifecycle** — walk entities through their full lifecycle across ALL features that touch them. If feature A creates a record and feature B deletes it, what happens to feature C that references it?
-- [ ] **Dirty state** — seed realistic accumulated state BEFORE testing. Don't test against a clean database. Test with existing records, FK children, pending operations, and partially-completed workflows from other features
-- [ ] **FK constraint awareness** — if this feature operates on a table that has FK children (or is a FK child), at least one scenario must seed child/parent records and verify the operation handles them correctly (CASCADE, SET NULL, or explicit error)
-- [ ] **Shared resource contention** — if this feature changes a shared table/service/function, at least one scenario must verify that OTHER features' expected behavior still works after this feature's operations
+- [ ] **Cross-feature lifecycle** — walk shared resources through their full lifecycle across ALL features that touch them. If feature A creates a resource and feature B deletes it, what happens to feature C that depends on it?
+- [ ] **Accumulated state** — test against realistic state, not a clean slate. Seed existing data, pending operations, and partially-completed workflows from other features before running this feature's operations
+- [ ] **Shared resource contention** — if this feature changes a shared resource's behavior or state, at least one scenario must verify that OTHER features' expected behavior still works after this feature's operations
 
 **Public vs. holdout split strategy:**
 - Public scenarios: happy paths, basic validation, documented edge cases — things the code-agent SHOULD design for

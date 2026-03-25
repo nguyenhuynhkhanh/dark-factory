@@ -23,9 +23,9 @@ But also: think like someone who ships. Don't gold-plate. Don't demand enterpris
 - **Security**: Authentication, authorization, input sanitization, data exposure, injection vectors, rate limiting. If this handles user data, is it handled correctly?
 - **Performance**: N+1 queries, unbounded result sets, missing indexes, expensive operations in hot paths, caching strategy. Match the concern to the actual load.
 - **Data integrity**: Migrations, backward compatibility, concurrent writes, partial failure states. What happens to existing data?
-- **Cross-feature impact** (CRITICAL): When this feature touches a shared table, service, or API, you MUST evaluate ALL existing consumers. Read existing specs in `dark-factory/specs/` and grep the codebase for all code that reads/writes/deletes from the same tables or calls the same services. Flag any feature intersection where one feature's operations could break another's assumptions.
-- **FK constraint audit**: If this feature adds DELETE or UPDATE operations on a table that has foreign key children, flag whether CASCADE is set. If not, the spec MUST handle the case where child records exist. If another feature writes child records to this table, flag the interaction explicitly.
-- **Semantic change propagation**: If this feature changes the behavior of a shared function, API endpoint, or database query, you MUST identify ALL callers/consumers and flag them. A function that previously returned all records but now filters by status will silently break any consumer that assumed the old behavior.
+- **Cross-feature impact** (CRITICAL): When this feature touches any shared resource (data store, service, API, shared module, config, state), you MUST evaluate ALL existing consumers. Grep the codebase for all code that reads, writes, or depends on the same resources. Read existing specs in `dark-factory/specs/` that touch them. Flag any feature intersection where one feature's operations could break another's assumptions.
+- **Behavioral contract verification**: If this feature changes the behavior of any shared code — a function, API endpoint, query, event, or data shape — you MUST identify ALL callers/consumers and verify they still work under the new behavior. Silent behavioral changes (e.g., a query that now filters differently, a function that now returns a different shape, an event that fires at a different time) are the highest-risk class of bugs because they pass all local tests but break other features.
+- **Resource lifecycle completeness**: If this feature creates, modifies, or deletes shared resources, trace the full lifecycle of those resources across ALL features. Who creates them? Who reads them? Who modifies them? Who deletes them? What happens when one feature's operation invalidates another feature's assumptions about that resource's state?
 - **Error handling**: What happens when external dependencies fail? Are errors meaningful to the caller? Are failures recoverable?
 - **Observability**: Can someone debug this in production? Are the right things logged? Are there metrics for the critical paths?
 - **Cost**: Does this introduce expensive infrastructure? Is there a cheaper approach that meets the same requirements?
@@ -35,7 +35,7 @@ But also: think like someone who ships. Don't gold-plate. Don't demand enterpris
 - **Root cause depth**: Does the diagnosis reach the actual root cause, or just a symptom? Could this same pattern exist elsewhere in the codebase?
 - **Fix completeness**: Does the proposed fix prevent this class of bug from recurring, or just this specific instance?
 - **Blast radius accuracy**: Is the impact analysis thorough? Are there code paths the debug-agent missed?
-- **Cross-feature impact**: Does this bug exist at the intersection of two features? Check if other features touch the same tables/services and whether the fix could affect them.
+- **Cross-feature impact**: Does this bug exist at the intersection of two features? Check if other features depend on the same shared resources and whether the fix could affect them.
 - **Regression risk**: Is the fix minimal enough to avoid introducing new bugs?
 - **Systemic patterns**: Is this bug a symptom of a larger architectural issue? (Don't demand fixing the architectural issue now — but flag it.)
 
