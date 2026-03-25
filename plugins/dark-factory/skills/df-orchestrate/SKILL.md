@@ -110,7 +110,7 @@ Before ANY implementation begins, the spec must pass principal engineer review.
   - If APPROVED → skip review, proceed to implementation
   - If APPROVED WITH NOTES → skip review, proceed to implementation
   - If BLOCKED or no review exists → run review
-- Spawn an **independent** architect-agent (Agent tool with `subagent_type: "architect-agent"`) with:
+- Spawn an **independent** architect-agent (Agent tool with `.claude/agents/architect-agent.md`, `subagent_type: "architect-agent"`) with:
   - The spec file path
   - The feature name
   - Whether this is a feature or bugfix
