@@ -161,9 +161,40 @@ Scenarios are the real quality gate. They must cover what actually happens in pr
 - [ ] **Accumulated state** — test against realistic state, not a clean slate. Seed existing data, pending operations, and partially-completed workflows from other features before running this feature's operations
 - [ ] **Shared resource contention** — if this feature changes a shared resource's behavior or state, at least one scenario must verify that OTHER features' expected behavior still works after this feature's operations
 
+**Scenario quality rules** (MANDATORY — these prevent the most common coverage gaps):
+
+1. **No implicit coverage.** Every behavior mentioned anywhere in the spec — including notes, "implied" behaviors, and parenthetical remarks — MUST have its own dedicated scenario with explicit Given/When/Then. If a scenario's notes say "same PATCH with `true` reverses this", that reverse operation needs its own standalone scenario. Notes are not tests.
+
+2. **Complete state transitions.** If the feature introduces a state change (e.g., activate/deactivate), you MUST write scenarios for EVERY transition direction AND verify downstream effects of each. Specifically:
+   - Forward transition (e.g., active → deactivated) + its effect on dependent features
+   - Reverse transition (e.g., deactivated → reactivated) + its effect on dependent features
+   - No-op transition (e.g., deactivate an already-deactivated entity)
+   - Each transition's immediate visibility in related queries/filters
+
+3. **Cross-feature side effects.** For every module/feature that reads the data this feature writes, write at least one scenario that performs this feature's operation and then verifies the OTHER module still behaves correctly. To find these modules:
+   - Grep the codebase for all consumers of the data stores/APIs this feature modifies
+   - For each consumer found, write a scenario: "After [this feature's operation], [other module] still returns correct results"
+   - Pay special attention to filter/query endpoints in other modules — they are the most common gap
+
+4. **Spec-to-scenario traceability.** After writing all scenarios, perform a self-audit:
+   - Every Edge Case (EC-*) in the spec MUST map to at least one scenario. No exceptions.
+   - Every Business Rule (BR-*) MUST be exercised by at least one scenario.
+   - Every Error Handling row MUST have a scenario that triggers that exact error.
+   - If any spec item lacks a scenario, write one before finishing. Document the mapping in a `## Traceability` section at the end of the spec:
+     ```
+     ## Traceability
+     | Spec Item | Scenario(s) |
+     |-----------|-------------|
+     | EC-1      | H-03, P-07  |
+     | BR-2      | P-01, H-05  |
+     ```
+
+5. **Parameter and entity variant coverage.** If an operation accepts a parameter that selects from multiple entities (e.g., `?module=CLASS` / `?module=COURSE` / `?module=SESSION`), write at least one scenario for EACH entity variant, not just one representative. The same applies to filter parameters — if the API supports filtering by branch, user, status, etc., each filter dimension needs its own scenario.
+
 **Public vs. holdout split strategy:**
 - Public scenarios: happy paths, basic validation, documented edge cases — things the code-agent SHOULD design for
-- Holdout scenarios: subtle edge cases, race conditions, failure recovery, adversarial inputs — things that test whether the implementation is ROBUST, not just functional
+- Holdout scenarios: subtle edge cases, race conditions, failure recovery, adversarial inputs, **cross-feature side effects**, **reverse state transitions**, and **parameter variant coverage** — things that test whether the implementation is ROBUST, not just functional
+- When in doubt, make it holdout — a scenario the code-agent doesn't see is a stronger validation than one it designs for
 
 7. **Report** what was created and suggest the lead review holdout scenarios
 8. **STOP** — do NOT trigger implementation
