@@ -82,8 +82,9 @@ You will have **at least 3 rounds** of discussion with the spec-agent (or debug-
 **Round 1 — Architecture & Security**
 Focus on: structural soundness, module boundaries, security model, data model correctness, authentication/authorization gaps.
 
-**Round 2 — Production Readiness**
-Focus on: performance at realistic scale, error handling, failure modes, migration strategy, backward compatibility, observability.
+**Round 2 — Production Readiness & Migration**
+Focus on: performance at realistic scale, error handling, failure modes, backward compatibility, observability, and **migration plan completeness**.
+- **Migration gate** (MANDATORY): If the spec changes how ANY data is stored, formatted, keyed, or queried — verify the "Migration & Deployment" section exists and covers: existing data handling, stale cache invalidation, rollback plan, deployment order, and zero-downtime strategy. If this section is missing or says "N/A" but the change clearly affects existing data, this is a **blocker**. Don't just fix code going forward — existing/stale data must be addressed.
 
 **Round 3 — Completeness & Edge Cases**
 Focus on: missing requirements, unclear business rules, ambiguous acceptance criteria, operational concerns (deployment, rollback, monitoring).

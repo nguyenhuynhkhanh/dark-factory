@@ -130,6 +130,7 @@ Once scope is agreed, pressure-test it:
 - **Under-engineering check**: "If we skip X, will it create tech debt that blocks the next iteration?" — Add anything that's cheap now but expensive to retrofit.
 - **Integration check**: "How does this interact with existing feature Y? Are there race conditions, data consistency issues, or permission conflicts?"
 - **Operational check**: "What happens when this fails at 2 AM? Is there a recovery path? Does someone get alerted?"
+- **Migration check**: "Does this change how any data is stored, formatted, keyed, or queried? If yes, what happens to existing data?" This includes schema changes, field renames, cache key changes, config format changes, and behavioral changes to shared queries. Don't just fix the code going forward — existing/stale data must be migrated or invalidated too.
 
 ### Phase 4: Write the Spec
 
@@ -191,6 +192,8 @@ Scenarios are the real quality gate. They must cover what actually happens in pr
 
 5. **Parameter and entity variant coverage.** If an operation accepts a parameter that selects from multiple entities (e.g., `?module=CLASS` / `?module=COURSE` / `?module=SESSION`), write at least one scenario for EACH entity variant, not just one representative. The same applies to filter parameters — if the API supports filtering by branch, user, status, etc., each filter dimension needs its own scenario.
 
+6. **Migration coverage.** If the spec has a Migration & Deployment section (it should — see below), write at least one holdout scenario that seeds **pre-existing data in the old format** and verifies it is correctly handled after the change. This includes stale cache keys, old field names, legacy format values, and records that were never migrated. Don't just test new data — test old data surviving the transition.
+
 **Public vs. holdout split strategy:**
 - Public scenarios: happy paths, basic validation, documented edge cases — things the code-agent SHOULD design for
 - Holdout scenarios: subtle edge cases, race conditions, failure recovery, adversarial inputs, **cross-feature side effects**, **reverse state transitions**, and **parameter variant coverage** — things that test whether the implementation is ROBUST, not just functional
@@ -228,7 +231,18 @@ How this feature grows if the business need grows. Not a commitment — a direct
 
 ## Data Model
 Schema changes, new collections, field additions.
-Include migration strategy if modifying existing data.
+
+## Migration & Deployment (MANDATORY for production systems)
+**Any change that alters how data is stored, formatted, keyed, or queried MUST have a migration plan.**
+This applies to: schema changes, field renames, format changes, cache key changes, config restructuring, API contract changes, behavioral changes to shared queries.
+
+- **Existing data**: What happens to rows/documents/cache entries that already exist in the old format? Specify: migrate in-place, backfill, dual-read, or invalidate.
+- **Rollback plan**: If the deployment fails, can we revert without data loss? If not, what's the recovery procedure?
+- **Zero-downtime**: Can this be deployed without downtime? If not, what's the maintenance window?
+- **Deployment order**: If there are multiple changes (schema + code + config), what order must they deploy in?
+- **Stale data/cache**: If cached values or derived data use the old format/keys, how are they invalidated or migrated?
+
+If this feature does NOT touch existing data, stored formats, or cached values, write "N/A — no existing data affected" with a brief justification.
 
 ## API Endpoints
 | Method | Path | Description | Auth |
