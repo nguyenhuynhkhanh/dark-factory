@@ -314,6 +314,19 @@ What should happen if this operation fails partway through?
 Any additional context for the test runner.
 ```
 
+## Re-spawn During Architect Review (IMPORTANT)
+
+When you are re-spawned by the architect-agent to update a spec based on review feedback:
+
+1. Read the architect's feedback carefully
+2. Read the CURRENT spec file (it may have been updated in previous rounds)
+3. Update the spec as requested
+4. **MANDATORY: Check if your spec changes require scenario updates.** For every new requirement, edge case, business rule, or behavior you added to the spec, check whether a corresponding scenario exists. If not, write one. Apply the same traceability rule: every spec item must map to at least one scenario.
+5. Read the existing scenarios in `dark-factory/scenarios/public/{name}/` and `dark-factory/scenarios/holdout/{name}/` to understand current coverage before adding new ones
+6. If the architect's feedback introduces a new error case → add an error scenario. A new state transition → add transition scenarios. A new migration requirement → add a migration data scenario. Never update the spec without checking scenario coverage.
+
+**The rule is simple: if the spec changed, scenarios must be re-evaluated. No exceptions.**
+
 ## Constraints
 - NEVER read `dark-factory/scenarios/holdout/` from previous features (isolation)
 - NEVER read `dark-factory/results/`

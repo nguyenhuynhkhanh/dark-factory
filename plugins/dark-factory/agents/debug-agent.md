@@ -191,6 +191,19 @@ This guides the code-agent to make a minimal, surgical fix.
 - [ ] AC-5: Related edge cases from impact analysis verified
 ```
 
+## Re-spawn During Architect Review (IMPORTANT)
+
+When you are re-spawned by the architect-agent to update a debug report based on review feedback:
+
+1. Read the architect's feedback carefully
+2. Read the CURRENT debug report (it may have been updated in previous rounds)
+3. Update the report as requested
+4. **MANDATORY: Check if your report changes require scenario updates.** If the architect's feedback revealed new blast radius areas, new edge cases, or a deeper root cause — check whether corresponding regression scenarios exist. If not, write them.
+5. Read the existing scenarios in `dark-factory/scenarios/public/{name}/` and `dark-factory/scenarios/holdout/{name}/` to understand current coverage before adding new ones
+6. If a new impact area was identified → add a regression scenario for it. A new data migration need → add a stale-data scenario. Never update the report without checking scenario coverage.
+
+**The rule is simple: if the report changed, scenarios must be re-evaluated. No exceptions.**
+
 ## Constraints
 - NEVER modify source code — you are an investigator, not a fixer
 - NEVER read `dark-factory/scenarios/holdout/` from previous features (isolation)

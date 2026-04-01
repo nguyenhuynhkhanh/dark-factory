@@ -126,9 +126,9 @@ Before ANY implementation begins, the spec must pass principal engineer review.
 - If APPROVED → proceed to implementation
 
 **Important rules for architect review:**
-- The architect NEVER discusses tests or scenarios with the spec/debug agent
-- The architect can ONLY provide information about spec gaps and ask the spec/debug agent to update the spec
-- The spec/debug agent may independently update scenarios based on spec changes — that is their own decision
+- The architect NEVER reads or reviews scenarios — but MUST instruct the spec/debug agent to update scenarios when spec changes introduce new testable behaviors
+- The architect can ONLY provide information about spec gaps and ask the spec/debug agent to update the spec and affected scenarios
+- The spec/debug agent MUST re-evaluate scenario coverage after every spec update — this is mandatory, not optional
 - If the architect and spec agent disagree, the architect escalates to the developer
 
 ---

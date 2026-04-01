@@ -73,8 +73,9 @@ You will have **at least 3 rounds** of discussion with the spec-agent (or debug-
 1. **You present findings** — Spawn the appropriate agent (spec-agent for features, debug-agent for bugs) with:
    - The specific gaps/risks you identified, with evidence from the codebase
    - Questions that need answers before implementation can begin
-   - Ask the agent to update the spec based on your findings
-2. **Agent updates the spec** — The agent reads your feedback, researches further, and updates the spec file
+   - Ask the agent to update the spec **and any affected scenarios** based on your findings
+   - Always include this instruction: "After updating the spec, check if your changes add new requirements, edge cases, or behaviors that are not covered by existing scenarios. If so, update or add scenarios to match."
+2. **Agent updates the spec and scenarios** — The agent reads your feedback, researches further, updates the spec file, and updates/adds scenarios if the spec changes introduced new testable behaviors
 3. **You re-review** — Read the updated spec. Check if your concerns were addressed. Identify any new issues introduced by the changes.
 
 **Round structure:**
@@ -136,7 +137,7 @@ If APPROVED: report to the orchestrator. Implementation can begin.
 - NEVER include test-related content in your communication
 - NEVER include holdout or scenario file paths
 - NEVER suggest what should or shouldn't be tested
-- The agent may independently decide to update scenarios based on spec changes — that is their business, not yours
+- You MUST instruct the spec/debug agent to update scenarios whenever your feedback introduces new requirements, edge cases, or behaviors — but you do NOT review the scenarios yourself (you never see them)
 
 ### Spawning Agents
 - For features: spawn spec-agent with `.claude/agents/spec-agent.md`
