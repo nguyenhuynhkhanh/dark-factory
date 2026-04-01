@@ -34,26 +34,30 @@ Dark Factory is an open-source multi-agent framework for Claude Code. Just descr
 
 **Prerequisites**: [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed
 
-### Option A: Claude Code Plugin (recommended)
+### Install as Claude Code Plugin (recommended)
 
-```bash
-claude plugin marketplace add nguyenhuynhkhanh/dark-factory
-claude plugin install dark-factory@dark-factory-marketplace
+Inside any Claude Code session, run:
+
+```
+/plugin marketplace add nguyenhuynhkhanh/dark-factory
+/plugin install dark-factory@dark-factory-marketplace
 ```
 
-Done. Dark Factory is now available across all your projects.
+That's it — Dark Factory is now available across **all** your projects. The plugin auto-updates when new versions are pushed.
 
-### Option B: npm (per-project)
+### Alternative: npm (per-project install)
 
 ```bash
 npx dark-factory init
 ```
 
-To update later: `npx dark-factory update`
+This copies agents, skills, and rules into the current project only. To update later: `npx dark-factory update`
 
-### Then
+### Get started
 
-Open Claude Code in your project and run `/df-onboard` to map it. After that, just describe what you need — Dark Factory activates automatically.
+1. Open Claude Code in your project
+2. Run `/df-onboard` to map your project's architecture
+3. Just describe what you need — Dark Factory activates automatically
 
 ---
 
@@ -254,7 +258,7 @@ your-project/
 
 **Why `.claude/rules/` instead of CLAUDE.md?** — Dark Factory instructions load automatically from `.claude/rules/dark-factory.md` without touching your project's `CLAUDE.md`. Your project settings stay clean.
 
-**Why `npx` instead of cloning?** — `npx dark-factory init` copies template files into your project. `npx dark-factory update` refreshes agents/skills/rules without touching your specs or scenarios. No git submodules, no manual copying.
+**Why a Claude Code plugin?** — Install once with `/plugin install`, get Dark Factory across all your projects with auto-updates. No git submodules, no manual copying. The `npx dark-factory init` option is still available for per-project installs if you prefer.
 
 ---
 
