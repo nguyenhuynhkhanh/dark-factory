@@ -220,17 +220,24 @@ Update `dark-factory/manifest.json` for EACH spec (single or multiple):
 - `"dependencies"` lists sub-spec names that must complete before this one
 - Write the updated manifest back
 
-### Step 7: Present holdout scenarios for review
+### Step 7: Present scenarios for review
 
-After the spec(s) and scenarios are written, **show the holdout scenarios directly to the developer** for review. Do NOT just tell them to go read files — display the content inline:
+After the spec(s) and scenarios are written, **show both public and holdout scenarios directly to the developer** for review. Do NOT just tell them to go read files — display the content inline:
 
-1. Read each holdout scenario file from `dark-factory/scenarios/holdout/{name}/` (for each spec if decomposed)
-2. Present them in a clear summary format:
+1. Read each **public** scenario file from `dark-factory/scenarios/public/{name}/` (for each spec if decomposed)
+2. Read each **holdout** scenario file from `dark-factory/scenarios/holdout/{name}/` (for each spec if decomposed)
+3. Present them in a clear summary format, grouped by type:
+   **Public scenarios** (visible to code-agent during implementation):
    - Scenario name, type, priority
    - Brief description of what it tests
    - The key assertion / expected outcome
-3. Ask the developer:
-   > Here are the holdout scenarios (these are hidden from the code-agent during implementation). Do they look good?
+
+   **Holdout scenarios** (hidden from code-agent, used for validation only):
+   - Scenario name, type, priority
+   - Brief description of what it tests
+   - The key assertion / expected outcome
+4. Ask the developer:
+   > Here are all scenarios. Public ones guide the code-agent; holdout ones are hidden and used for validation. Do they look good?
    > - **Proceed** — start implementation with `/df-orchestrate {all-spec-names}`
    > - **Adjust** — tell me what to change and I'll update the scenarios
 4. If the developer says proceed:

@@ -37,11 +37,12 @@ Analyze the developer's input and classify it as **bug** or **feature**.
 
 ## Process
 
-1. Read the developer's input
-2. Classify using the rules above — spend no more than 10 seconds reasoning
-3. **If clearly a bug**: Tell the developer "This looks like a bug — routing to debug pipeline." then invoke `/df-debug` with their description
-4. **If clearly a feature**: Tell the developer "This looks like a feature — routing to spec pipeline." then invoke `/df-intake` with their description
-5. **If ambiguous**: Ask the developer:
+1. Read `plugins/dark-factory/VERSION` (or `dark-factory/VERSION` if installed as plugin) and display: `Dark Factory v{version}` at the top of your response
+2. Read the developer's input
+3. Classify using the rules above — spend no more than 10 seconds reasoning
+4. **If clearly a bug**: Tell the developer "This looks like a bug — routing to debug pipeline." then invoke `/df-debug` with their description
+5. **If clearly a feature**: Tell the developer "This looks like a feature — routing to spec pipeline." then invoke `/df-intake` with their description
+6. **If ambiguous**: Ask the developer:
    > I'm not sure if this is a bug or a new feature. Which pipeline should I use?
    > - **Bug** (`/df-debug`): forensic investigation, root cause analysis, minimal fix
    > - **Feature** (`/df-intake`): scope discovery, spec writing, full implementation
