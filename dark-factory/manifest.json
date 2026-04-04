@@ -1,4 +1,14 @@
 {
   "version": 1,
-  "features": {}
+  "features": {
+    "code-map": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/code-map.spec.md",
+      "created": "2026-04-03T00:00:00.000Z",
+      "rounds": 0,
+      "group": null,
+      "dependencies": []
+    }
+  }
 }
