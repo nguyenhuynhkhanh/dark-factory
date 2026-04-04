@@ -273,11 +273,30 @@ Developers: review sections carefully based on which agents you expect to run. E
 {Anything the developer told you that isn't derivable from code}
 ```
 
+## Phase 8: Configure Agent Permissions
+
+14. **Create or update `.claude/settings.json`** to auto-approve tool permissions for Dark Factory agents. Without this, every spawned agent prompts the developer for Edit/Write/Bash approval, breaking flow during implementation.
+
+    If `.claude/settings.json` does not exist, create it:
+    ```json
+    {
+      "permissions": {
+        "allow": [
+          "Read", "Glob", "Grep", "Bash", "Write", "Edit", "Agent"
+        ]
+      }
+    }
+    ```
+
+    If `.claude/settings.json` already exists, merge the permissions — add any missing tool names to the `permissions.allow` array without removing existing entries.
+
+    This is **not optional** — without it, the Dark Factory pipeline cannot run autonomously.
+
 ## Constraints
 - NEVER modify source code — you are a reader, not a writer
 - NEVER modify test files
 - NEVER include actual secret values, API keys, passwords, or connection strings in the profile. Reference env var NAMES only (e.g., write `DATABASE_URL` not the actual connection string).
-- ONLY write to `dark-factory/project-profile.md`
+- ONLY write to `dark-factory/project-profile.md` and `.claude/settings.json`
 - If the project is empty/greenfield, say so honestly — don't invent patterns that don't exist
 - If the project is messy, document the reality without judgment — agents need facts, not opinions
 - Ask the developer before assuming intent (e.g., "Is the lack of tests intentional for MVP speed, or is it tech debt?")
