@@ -33,8 +33,6 @@ Take the developer's raw input and spawn **3 independent spec-agents simultaneou
 >
 > Feature description: {raw input}
 >
-> Before researching the codebase, read `dark-factory/project-profile.md` if it exists -- it provides a map of the project's architecture, conventions, and patterns. Focus on sections relevant to your perspective.
->
 > Research the codebase, then output your findings as a structured report with these sections:
 > - **Users & Use Cases**: who uses this and how
 > - **Proposed Scope**: what's in/out for v1, with rationale
@@ -50,8 +48,6 @@ Take the developer's raw input and spawn **3 independent spec-agents simultaneou
 > Focus on: how this fits into the existing architecture, which modules/services are affected, data model changes, API design, integration points with existing features, performance implications, migration strategy if needed.
 >
 > Feature description: {raw input}
->
-> Before researching the codebase, read `dark-factory/project-profile.md` if it exists -- it provides a map of the project's architecture, conventions, and patterns. Focus on sections relevant to your perspective.
 >
 > Research the codebase, then output your findings as a structured report with these sections:
 > - **Affected Systems**: which parts of the codebase this touches
@@ -69,8 +65,6 @@ Take the developer's raw input and spawn **3 independent spec-agents simultaneou
 > Focus on: what can go wrong, concurrency issues, partial failures, data consistency, error handling, security implications, operational concerns (monitoring, alerting, recovery), backward compatibility, what happens at scale.
 >
 > Feature description: {raw input}
->
-> Before researching the codebase, read `dark-factory/project-profile.md` if it exists -- it provides a map of the project's architecture, conventions, and patterns. Focus on sections relevant to your perspective.
 >
 > Research the codebase, then output your findings as a structured report with these sections:
 > - **Failure Modes**: what can go wrong and how to handle it
@@ -126,6 +120,7 @@ Before writing anything, analyze whether this feature should be **one spec or mu
    - Implementable without the others being complete (or with a clear dependency order)
    - Testable in isolation (its own scenarios can pass without other specs)
    - Touching a mostly distinct set of files (minimal overlap)
+5. **Check for dependencies on existing active specs**: Read `dark-factory/manifest.json` and check for existing active specs. Analyze file overlap between the new spec(s) and existing active specs. If the new spec modifies files that an existing active spec also modifies, or if the new spec depends on output from an existing active spec, mark the existing spec as a dependency. Only mark as independent if there is truly no overlap or dependency relationship.
 
 **Dependency ordering:**
 - If spec-B needs the data model from spec-A, mark spec-A as a **dependency** of spec-B
@@ -222,8 +217,9 @@ Update `dark-factory/manifest.json` for EACH spec (single or multiple):
     "dependencies": ["{dep-spec-name}", "..."]
   }
   ```
-- For decomposed specs, all sub-specs share the same `"group"` value (the parent feature name)
-- `"dependencies"` lists sub-spec names that must complete before this one
+- **MANDATORY**: Every manifest entry MUST include both `group` and `dependencies` fields:
+  - `"group"`: For decomposed specs, all sub-specs share the same `"group"` value (the parent feature name). For single/standalone specs, set to `null`. NEVER omit this field.
+  - `"dependencies"`: Lists sub-spec names that must complete before this one. For independent specs (no dependencies), set to `[]` (empty array). NEVER omit this field.
 - Write the updated manifest back
 
 ### Step 7: Present scenarios for review
