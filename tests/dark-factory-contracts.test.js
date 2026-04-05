@@ -351,30 +351,42 @@ describe("Cross-agent contracts", () => {
   });
 
   // -------------------------------------------------------------------------
-  // Handoff 10: onboard-agent -> scanner-agents
+  // Handoff 10: onboard-agent -> codemap-agent -> scanner-agents
   // -------------------------------------------------------------------------
-  describe("onboard-agent -> scanner-agents", () => {
-    it("onboard-agent spawns scanners with directory chunks", () => {
+  describe("onboard-agent -> codemap-agent -> scanner-agents", () => {
+    it("onboard-agent delegates code map construction to codemap-agent", () => {
       const onboard = readAgent("onboard-agent");
       assert.ok(
-        onboard.includes("scanner") || onboard.includes("Scanner"),
-        "onboard-agent should reference scanner agents"
+        onboard.includes("codemap-agent"),
+        "onboard-agent should reference codemap-agent"
       );
       assert.ok(
-        onboard.includes("assigned directory") || onboard.includes("assigned directories") || onboard.includes("assigned chunk"),
-        "onboard-agent should assign directory chunks to scanners"
+        onboard.includes("code-map.md"),
+        "onboard-agent should verify code-map.md creation"
       );
     });
 
-    it("onboard-agent expects structured report back from scanners", () => {
-      const onboard = readAgent("onboard-agent");
+    it("codemap-agent spawns scanners with directory chunks", () => {
+      const codemap = readAgent("codemap-agent");
       assert.ok(
-        onboard.includes("structured report"),
-        "onboard-agent should expect structured reports from scanners"
+        codemap.includes("scanner") || codemap.includes("Scanner"),
+        "codemap-agent should reference scanner agents"
       );
       assert.ok(
-        onboard.includes("Imports") && onboard.includes("Exports"),
-        "onboard-agent scanner report should include Imports and Exports"
+        codemap.includes("assigned directory") || codemap.includes("assigned directories") || codemap.includes("assigned chunk"),
+        "codemap-agent should assign directory chunks to scanners"
+      );
+    });
+
+    it("codemap-agent expects structured report back from scanners", () => {
+      const codemap = readAgent("codemap-agent");
+      assert.ok(
+        codemap.includes("structured report"),
+        "codemap-agent should expect structured reports from scanners"
+      );
+      assert.ok(
+        codemap.includes("Imports") && codemap.includes("Exports"),
+        "codemap-agent scanner report should include Imports and Exports"
       );
     });
   });

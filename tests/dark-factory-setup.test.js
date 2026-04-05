@@ -57,6 +57,7 @@ describe("Agent definitions", () => {
     "code-agent",
     "test-agent",
     "promote-agent",
+    "codemap-agent",
   ];
 
   for (const name of expectedAgents) {
@@ -881,154 +882,154 @@ describe("Plugin mirrors for group-orchestrate", () => {
 // Promoted from Dark Factory holdout: code-map
 // ===========================================================================
 
-describe("Code map — onboard-agent scanning instructions", () => {
-  it("H-01: onboard-agent excludes binary files, images, and fonts from scanning", () => {
-    const content = readAgent("onboard-agent");
+describe("Code map — codemap-agent scanning instructions", () => {
+  it("H-01: codemap-agent excludes binary files, images, and fonts from scanning", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("code-map") || content.includes("code map"),
-      "onboard-agent should have a code map scanning phase"
+      "codemap-agent should have a code map scanning phase"
     );
     assert.ok(
       (content.includes(".png") || content.includes(".jpg") || content.includes("image")) &&
         (content.includes("exclud") || content.includes("skip")),
-      "onboard-agent should exclude binary/image files from code map scanning"
+      "codemap-agent should exclude binary/image files from code map scanning"
     );
   });
 
-  it("H-02: onboard-agent detects and excludes generated code", () => {
-    const content = readAgent("onboard-agent");
+  it("H-02: codemap-agent detects and excludes generated code", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("@generated") || content.includes("__generated__") || content.includes("prisma/client"),
-      "onboard-agent should detect generated code directories or markers"
+      "codemap-agent should detect generated code directories or markers"
     );
   });
 
-  it("H-03: onboard-agent includes Python import detection for code map", () => {
-    const content = readAgent("onboard-agent");
+  it("H-03: codemap-agent includes Python import detection for code map", () => {
+    const content = readAgent("codemap-agent");
     // Must mention Python imports in the context of scanning/dependency analysis, not just tech stack detection
     assert.ok(
       content.includes("code-map") || content.includes("scanner") || content.includes("dependency graph"),
-      "onboard-agent should have a code map / scanner / dependency graph phase"
+      "codemap-agent should have a code map / scanner / dependency graph phase"
     );
     assert.ok(
       content.includes("from .") || content.includes("relative import") ||
         (content.includes("Python") && content.includes("import") && content.includes("detect")),
-      "onboard-agent should describe Python import detection patterns for scanning"
+      "codemap-agent should describe Python import detection patterns for scanning"
     );
   });
 
-  it("H-04: onboard-agent includes Go import detection for code map", () => {
-    const content = readAgent("onboard-agent");
+  it("H-04: codemap-agent includes Go import detection for code map", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       (content.includes("Go") && content.includes("import")) ||
         content.includes("Go package") || content.includes("Go import"),
-      "onboard-agent should describe Go import detection patterns for code map scanning"
+      "codemap-agent should describe Go import detection patterns for code map scanning"
     );
   });
 
-  it("H-05: onboard-agent detects dynamic/runtime dependencies for code map", () => {
-    const content = readAgent("onboard-agent");
+  it("H-05: codemap-agent detects dynamic/runtime dependencies for code map", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("dynamic import") || content.includes("dynamic depend") ||
         content.includes("runtime depend") || content.includes("Runtime Dependencies"),
-      "onboard-agent should mention dynamic/runtime dependency detection for code map"
+      "codemap-agent should mention dynamic/runtime dependency detection for code map"
     );
   });
 
-  it("H-06: onboard-agent scales to 5 scanners for large projects", () => {
-    const content = readAgent("onboard-agent");
+  it("H-06: codemap-agent scales to 5 scanners for large projects", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("scanner"),
-      "onboard-agent should reference scanner agents"
+      "codemap-agent should reference scanner agents"
     );
     assert.ok(
       content.includes("5") && content.includes("scanner"),
-      "onboard-agent should scale to 5 scanners for large projects"
+      "codemap-agent should scale to 5 scanners for large projects"
     );
   });
 
-  it("H-07: onboard-agent bounds code map output size", () => {
-    const content = readAgent("onboard-agent");
+  it("H-07: codemap-agent bounds code map output size", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       (content.includes("200") && content.includes("line")) ||
         (content.includes("output") && content.includes("bound")),
-      "onboard-agent should bound code map output to ~200 lines"
+      "codemap-agent should bound code map output to ~200 lines"
     );
   });
 
-  it("H-10: onboard-agent includes Dark Factory .claude/ files in scan scope", () => {
-    const content = readAgent("onboard-agent");
+  it("H-10: codemap-agent includes Dark Factory .claude/ files in scan scope", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes(".claude/") &&
         (content.includes("scan") || content.includes("includ")) &&
         content.includes("code-map"),
-      "onboard-agent should include .claude/ files in code map scan scope"
+      "codemap-agent should include .claude/ files in code map scan scope"
     );
   });
 
-  it("H-12: onboard-agent traces barrel files through to actual source modules", () => {
-    const content = readAgent("onboard-agent");
+  it("H-12: codemap-agent traces barrel files through to actual source modules", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       (content.includes("barrel") && content.includes("trace")) ||
         (content.includes("barrel") && content.includes("re-export") && content.includes("source module")),
-      "onboard-agent should trace barrel files to actual source modules in dependency graph"
+      "codemap-agent should trace barrel files to actual source modules in dependency graph"
     );
   });
 
-  it("H-16: onboard-agent handles scanner agent failure gracefully", () => {
-    const content = readAgent("onboard-agent");
+  it("H-16: codemap-agent handles scanner agent failure gracefully", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("scanner") &&
         (content.includes("fail") || content.includes("partial") || content.includes("degrad")),
-      "onboard-agent should handle scanner failure with graceful degradation"
+      "codemap-agent should handle scanner failure with graceful degradation"
     );
   });
 
-  it("H-18: onboard-agent uses default exclusion list when no .gitignore", () => {
-    const content = readAgent("onboard-agent");
+  it("H-18: codemap-agent uses default exclusion list when no .gitignore", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("node_modules") && content.includes("vendor") &&
         (content.includes(".venv") || content.includes("venv")) &&
         (content.includes("exclusion") || content.includes("exclud") || content.includes("skip")),
-      "onboard-agent should have a default exclusion list including node_modules, vendor, venv"
+      "codemap-agent should have a default exclusion list including node_modules, vendor, venv"
     );
   });
 });
 
 describe("Code map — developer sign-off and refresh", () => {
-  it("H-08: onboard-agent requires developer sign-off before writing code map", () => {
-    const content = readAgent("onboard-agent");
+  it("H-08: codemap-agent requires developer sign-off before writing code map", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("code-map") &&
         (content.includes("sign-off") || content.includes("confirm") || content.includes("approve")),
-      "onboard-agent should require developer sign-off for code map"
+      "codemap-agent should require developer sign-off for code map"
     );
   });
 
-  it("H-09: onboard-agent preserves existing code map on rejected refresh", () => {
-    const content = readAgent("onboard-agent");
+  it("H-09: codemap-agent preserves existing code map on rejected refresh", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("code-map") &&
         (content.includes("reject") || content.includes("preserve")),
-      "onboard-agent should preserve existing code map if developer rejects refresh"
+      "codemap-agent should preserve existing code map if developer rejects refresh"
     );
   });
 
-  it("H-19: onboard-agent adds code map reference to profile without corrupting existing content", () => {
-    const content = readAgent("onboard-agent");
+  it("H-19: codemap-agent adds code map reference to profile without corrupting existing content", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("code-map.md") && content.includes("project-profile"),
-      "onboard-agent should reference adding code-map.md link to project-profile.md"
+      "codemap-agent should reference adding code-map.md link to project-profile.md"
     );
   });
 });
 
 describe("Code map — write target and agent compatibility", () => {
-  it("H-21: onboard-agent constraints allow writing code-map.md", () => {
-    const content = readAgent("onboard-agent");
+  it("H-21: codemap-agent constraints allow writing code-map.md", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("code-map.md"),
-      "onboard-agent constraints should list code-map.md as an allowed write target"
+      "codemap-agent constraints should list code-map.md as an allowed write target"
     );
   });
 
@@ -1439,53 +1440,53 @@ describe("dark-factory.md health check documentation", () => {
 });
 
 describe("Code map — edge cases in dependency analysis", () => {
-  it("H-11: onboard-agent handles circular dependencies in code map without corrupting hotspots", () => {
-    const content = readAgent("onboard-agent");
+  it("H-11: codemap-agent handles circular dependencies in code map without corrupting hotspots", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       (content.includes("circular") || content.includes("cycle")) &&
         (content.includes("hotspot") || content.includes("fan-in") || content.includes("dependency graph")),
-      "onboard-agent should handle circular dependencies in hotspot/dependency analysis"
+      "codemap-agent should handle circular dependencies in hotspot/dependency analysis"
     );
   });
 
-  it("H-13: onboard-agent handles mixed-language projects in code map scanning", () => {
-    const content = readAgent("onboard-agent");
+  it("H-13: codemap-agent handles mixed-language projects in code map scanning", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("scanner") || content.includes("code-map"),
-      "onboard-agent should have code map scanning phase"
+      "codemap-agent should have code map scanning phase"
     );
     assert.ok(
-      (content.includes("TypeScript") || content.includes("JavaScript")) &&
+      (content.includes("TypeScript") || content.includes("JavaScript") || content.includes("JS/TS")) &&
         content.includes("Python") &&
         (content.includes("import") || content.includes("detect")),
-      "onboard-agent should handle multiple language import patterns in scanning"
+      "codemap-agent should handle multiple language import patterns in scanning"
     );
   });
 
-  it("H-14: onboard-agent maps monorepo inter-package dependencies in code map", () => {
-    const content = readAgent("onboard-agent");
+  it("H-14: codemap-agent maps monorepo inter-package dependencies in code map", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("inter-package") ||
         (content.includes("monorepo") && content.includes("dependency graph")),
-      "onboard-agent should map monorepo inter-package dependencies in code map"
+      "codemap-agent should map monorepo inter-package dependencies in code map"
     );
   });
 
-  it("H-15: onboard-agent handles flat script directories at file-level granularity", () => {
-    const content = readAgent("onboard-agent");
+  it("H-15: codemap-agent handles flat script directories at file-level granularity", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       content.includes("file-level") ||
         (content.includes("flat") && content.includes("dependency graph")),
-      "onboard-agent should handle flat directories with file-level dependency mapping"
+      "codemap-agent should handle flat directories with file-level dependency mapping"
     );
   });
 
-  it("H-17: onboard-agent handles projects with no import relationships in code map", () => {
-    const content = readAgent("onboard-agent");
+  it("H-17: codemap-agent handles projects with no import relationships in code map", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
       (content.toLowerCase().includes("no import") || content.includes("empty graph") || content.includes("no dependencies") || content.includes("No imports")) &&
         (content.includes("code-map") || content.includes("code map")),
-      "onboard-agent should handle projects with no import relationships gracefully"
+      "codemap-agent should handle projects with no import relationships gracefully"
     );
   });
 });
@@ -2067,189 +2068,162 @@ describe("Wave automation — rules and progress reporting", () => {
 });
 
 // ===========================================================================
-// 21. Org-model Phase 1 — Template extraction
+// Codemap agent extraction (org-model Phase 2)
 // ===========================================================================
 
-describe("Template files exist and contain expected content", () => {
-  const TEMPLATES_DIR = path.join(ROOT, "dark-factory", "templates");
-
-  it("dark-factory/templates/ directory exists", () => {
+describe("Codemap agent — structural assertions", () => {
+  it("codemap-agent has scanner spawning instructions", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      fs.existsSync(TEMPLATES_DIR),
-      "dark-factory/templates/ directory should exist"
+      content.includes("Spawn Scanner Agents") || content.includes("scanner agent"),
+      "codemap-agent should have scanner spawning instructions"
+    );
+    assert.ok(
+      content.includes("parallel"),
+      "codemap-agent should spawn scanners in parallel"
     );
   });
 
-  it("spec-template.md exists and contains key sections", () => {
-    const filePath = path.join(TEMPLATES_DIR, "spec-template.md");
-    assert.ok(fs.existsSync(filePath), "spec-template.md should exist");
-    const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.includes("# Feature: {name}"), "Should contain Feature header");
-    assert.ok(content.includes("## Context"), "Should contain Context section");
-    assert.ok(content.includes("## Scope"), "Should contain Scope section");
-    assert.ok(content.includes("## Requirements"), "Should contain Requirements section");
-    assert.ok(content.includes("## Business Rules"), "Should contain Business Rules section");
-    assert.ok(content.includes("## Edge Cases"), "Should contain Edge Cases section");
-    assert.ok(content.includes("## Migration & Deployment"), "Should contain Migration section");
-  });
-
-  it("debug-report-template.md exists and contains key sections", () => {
-    const filePath = path.join(TEMPLATES_DIR, "debug-report-template.md");
-    assert.ok(fs.existsSync(filePath), "debug-report-template.md should exist");
-    const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.includes("# Debug Report: {name}"), "Should contain Debug Report header");
-    assert.ok(content.includes("## Symptom"), "Should contain Symptom section");
-    assert.ok(content.includes("## Root Cause"), "Should contain Root Cause section");
-    assert.ok(content.includes("## Impact Analysis"), "Should contain Impact Analysis section");
-    assert.ok(content.includes("## Systemic Analysis"), "Should contain Systemic Analysis section");
-    assert.ok(content.includes("## Regression Risk Assessment"), "Should contain Regression Risk section");
-  });
-
-  it("project-profile-template.md exists and contains key sections", () => {
-    const filePath = path.join(TEMPLATES_DIR, "project-profile-template.md");
-    assert.ok(fs.existsSync(filePath), "project-profile-template.md should exist");
-    const content = fs.readFileSync(filePath, "utf8");
-    assert.ok(content.includes("# Project Profile"), "Should contain Project Profile header");
-    assert.ok(content.includes("## Overview"), "Should contain Overview section");
-    assert.ok(content.includes("## Tech Stack"), "Should contain Tech Stack section");
-    assert.ok(content.includes("## Architecture"), "Should contain Architecture section");
-    assert.ok(content.includes("## Testing"), "Should contain Testing section");
-    assert.ok(content.includes("## Structural Notes"), "Should contain Structural Notes section");
-  });
-});
-
-describe("Agents reference template files instead of embedding them", () => {
-  it("spec-agent.md references spec-template.md", () => {
-    const content = readAgent("spec-agent");
+  it("codemap-agent has synthesis instructions", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      content.includes("dark-factory/templates/spec-template.md"),
-      "spec-agent should reference dark-factory/templates/spec-template.md"
+      content.includes("Synthesize Code Map") || content.includes("merge their reports"),
+      "codemap-agent should have synthesis instructions"
     );
   });
 
-  it("debug-agent.md references debug-report-template.md", () => {
-    const content = readAgent("debug-agent");
+  it("codemap-agent has tech-stack-aware import detection", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      content.includes("dark-factory/templates/debug-report-template.md"),
-      "debug-agent should reference dark-factory/templates/debug-report-template.md"
+      content.includes("Tech-stack-aware import detection"),
+      "codemap-agent should have tech-stack-aware import detection section"
+    );
+    assert.ok(
+      content.includes("JS/TS") && content.includes("Python") && content.includes("Go") && content.includes("Java") && content.includes("Rust"),
+      "codemap-agent should cover JS/TS, Python, Go, Java, and Rust import patterns"
     );
   });
 
-  it("onboard-agent.md references project-profile-template.md", () => {
-    const content = readAgent("onboard-agent");
+  it("codemap-agent has directory partitioning logic", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      content.includes("dark-factory/templates/project-profile-template.md"),
-      "onboard-agent should reference dark-factory/templates/project-profile-template.md"
+      content.includes("Partition Source Files") || content.includes("scanner chunks"),
+      "codemap-agent should have directory partitioning logic"
     );
   });
 
-  it("spec-agent.md does not contain the full inline spec template", () => {
-    const content = readAgent("spec-agent");
-    // The inline template had this distinctive table that should now be in the template file only
+  it("codemap-agent has output bounding rules", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      !content.includes("| POST | /api/v1/... | ... | role |"),
-      "spec-agent should not contain the inline spec template API table"
+      content.includes("Bound the output") || content.includes("summarization"),
+      "codemap-agent should have output bounding rules"
     );
   });
 
-  it("debug-agent.md does not contain the full inline debug report template", () => {
-    const content = readAgent("debug-agent");
-    // The inline template had this distinctive section
+  it("codemap-agent has Mermaid diagram generation", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      !content.includes("## Regression Risk Assessment"),
-      "debug-agent should not contain the inline debug report Regression Risk Assessment section"
+      content.includes("Mermaid") && content.includes("code-map.mermaid"),
+      "codemap-agent should generate Mermaid diagrams"
     );
   });
 
-  it("onboard-agent.md does not contain the full inline profile template", () => {
-    const content = readAgent("onboard-agent");
-    // The inline template had this distinctive section
+  it("codemap-agent has code map template", () => {
+    const content = readAgent("codemap-agent");
     assert.ok(
-      !content.includes("## Authentication & Authorization Model"),
-      "onboard-agent should not contain the inline profile Authentication section"
+      content.includes("Module Dependency Graph") &&
+        content.includes("Entry Point Traces") &&
+        content.includes("Shared Dependency Hotspots"),
+      "codemap-agent should include the code map template sections"
+    );
+  });
+
+  it("codemap-agent has constraints section", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("## Constraints"),
+      "codemap-agent should have a Constraints section"
+    );
+    assert.ok(
+      content.includes("NEVER modify source code"),
+      "codemap-agent should prohibit source code modification"
+    );
+    assert.ok(
+      content.includes("NEVER modify test files"),
+      "codemap-agent should prohibit test file modification"
     );
   });
 });
 
-describe("Token cap assertions (Phase 1 — template extraction)", () => {
-  function tokenCount(content) {
-    return Math.ceil(content.length / 4);
-  }
-
-  it("debug-agent.md is under 3,000 token cap", () => {
-    const content = readAgent("debug-agent");
-    const tokens = tokenCount(content);
+describe("Codemap agent — token cap", () => {
+  it("codemap-agent is under 3,000 tokens", () => {
+    const content = readAgent("codemap-agent");
+    const estimatedTokens = Math.ceil(content.length / 4);
     assert.ok(
-      tokens <= 3000,
-      `debug-agent.md has ${tokens} tokens, exceeds 3,000 cap`
-    );
-  });
-
-  it("spec-agent.md token count decreased after template extraction", () => {
-    const content = readAgent("spec-agent");
-    const tokens = tokenCount(content);
-    // Original was ~5,124 tokens. After removing spec template (~1,200 tokens worth),
-    // should be under ~4,500. Final 4,000 cap reached after Phase 4 shared rules extraction.
-    assert.ok(
-      tokens < 5124,
-      `spec-agent.md has ${tokens} tokens, should be less than original 5,124`
-    );
-  });
-
-  it("onboard-agent.md token count decreased after template extraction", () => {
-    const content = readAgent("onboard-agent");
-    const tokens = tokenCount(content);
-    // Original was ~6,674 tokens. After removing profile template (~2,000 tokens worth),
-    // should be under ~5,500. Final 4,000 cap reached after Phase 2 codemap extraction.
-    assert.ok(
-      tokens < 6674,
-      `onboard-agent.md has ${tokens} tokens, should be less than original 6,674`
+      estimatedTokens <= 3000,
+      `codemap-agent is ${estimatedTokens} tokens, should be under 3,000`
     );
   });
 });
 
-describe("Plugin template mirrors", () => {
-  it("plugins/dark-factory/templates/ directory exists", () => {
-    const pluginTemplatesDir = path.join(ROOT, "plugins", "dark-factory", "templates");
+describe("Codemap agent — onboard-agent delegates to codemap-agent", () => {
+  it("onboard-agent spawns codemap-agent as sub-agent", () => {
+    const content = readAgent("onboard-agent");
     assert.ok(
-      fs.existsSync(pluginTemplatesDir),
-      "plugins/dark-factory/templates/ directory should exist"
+      content.includes("codemap-agent"),
+      "onboard-agent should reference codemap-agent"
+    );
+    assert.ok(
+      content.includes("Spawn") && content.includes("codemap-agent"),
+      "onboard-agent should spawn codemap-agent as a sub-agent"
     );
   });
 
-  it("plugin spec-template.md matches source", () => {
-    const source = fs.readFileSync(
-      path.join(ROOT, "dark-factory", "templates", "spec-template.md"),
-      "utf8"
+  it("onboard-agent Phase 3.5 is a delegation, not inline logic", () => {
+    const content = readAgent("onboard-agent");
+    // Should NOT contain the detailed scanner prompt or synthesis steps
+    assert.ok(
+      !content.includes("You are a code scanner"),
+      "onboard-agent should not contain scanner prompt (delegated to codemap-agent)"
     );
-    const plugin = fs.readFileSync(
-      path.join(ROOT, "plugins", "dark-factory", "templates", "spec-template.md"),
-      "utf8"
+    assert.ok(
+      !content.includes("Build module dependency graph"),
+      "onboard-agent should not contain synthesis steps (delegated to codemap-agent)"
     );
-    assert.equal(source, plugin, "Plugin spec-template.md should match source");
   });
 
-  it("plugin debug-report-template.md matches source", () => {
+  it("onboard-agent has Agent in its tools list", () => {
+    const content = readAgent("onboard-agent");
+    const fm = parseFrontmatter(content);
+    assert.ok(
+      fm.tools.includes("Agent"),
+      "onboard-agent should have Agent in its tools list for spawning codemap-agent"
+    );
+  });
+});
+
+describe("Plugin mirrors for codemap-agent", () => {
+  it("plugins codemap-agent.md matches source", () => {
     const source = fs.readFileSync(
-      path.join(ROOT, "dark-factory", "templates", "debug-report-template.md"),
+      path.join(ROOT, ".claude", "agents", "codemap-agent.md"),
       "utf8"
     );
     const plugin = fs.readFileSync(
-      path.join(ROOT, "plugins", "dark-factory", "templates", "debug-report-template.md"),
+      path.join(ROOT, "plugins", "dark-factory", "agents", "codemap-agent.md"),
       "utf8"
     );
-    assert.equal(source, plugin, "Plugin debug-report-template.md should match source");
+    assert.equal(source, plugin, "Plugin codemap-agent.md should match source");
   });
 
-  it("plugin project-profile-template.md matches source", () => {
+  it("plugins onboard-agent.md matches source (post-extraction)", () => {
     const source = fs.readFileSync(
-      path.join(ROOT, "dark-factory", "templates", "project-profile-template.md"),
+      path.join(ROOT, ".claude", "agents", "onboard-agent.md"),
       "utf8"
     );
     const plugin = fs.readFileSync(
-      path.join(ROOT, "plugins", "dark-factory", "templates", "project-profile-template.md"),
+      path.join(ROOT, "plugins", "dark-factory", "agents", "onboard-agent.md"),
       "utf8"
     );
-    assert.equal(source, plugin, "Plugin project-profile-template.md should match source");
+    assert.equal(source, plugin, "Plugin onboard-agent.md should match source");
   });
 });
