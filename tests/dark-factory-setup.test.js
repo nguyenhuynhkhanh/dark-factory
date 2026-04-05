@@ -58,6 +58,7 @@ describe("Agent definitions", () => {
     "test-agent",
     "promote-agent",
     "codemap-agent",
+    "implementation-agent",
   ];
 
   for (const name of expectedAgents) {
@@ -2202,6 +2203,88 @@ describe("Codemap agent — onboard-agent delegates to codemap-agent", () => {
   });
 });
 
+// ===========================================================================
+// Implementation-agent — structural assertions
+// ===========================================================================
+
+describe("Implementation-agent structural assertions", () => {
+  it("implementation-agent has valid frontmatter with name, description, tools", () => {
+    const content = readAgent("implementation-agent");
+    const fm = parseFrontmatter(content);
+    assert.ok(fm, "implementation-agent should have frontmatter");
+    assert.equal(fm.name, "implementation-agent", "name should be implementation-agent");
+    assert.ok(fm.description, "should have description");
+    assert.ok(fm.tools, "should have tools");
+    assert.ok(fm.tools.includes("Agent"), "should include Agent tool for spawning sub-agents");
+  });
+
+  it("implementation-agent contains architect review section", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("Architect Review") && content.includes("MANDATORY"),
+      "implementation-agent should contain mandatory architect review"
+    );
+  });
+
+  it("implementation-agent contains parallel domain review with 3 domains", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("Security & Data Integrity") &&
+        content.includes("Architecture & Performance") &&
+        content.includes("API Design & Backward Compatibility"),
+      "implementation-agent should contain all 3 domain parameters"
+    );
+  });
+
+  it("implementation-agent contains code-agent spawning for feature mode", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("code-agent") && content.includes("Feature Mode"),
+      "implementation-agent should spawn code-agents in feature mode"
+    );
+  });
+
+  it("implementation-agent contains red-green cycle for bugfix mode", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("Red Phase") && content.includes("Green Phase") && content.includes("Bugfix Mode"),
+      "implementation-agent should contain red-green cycle for bugfix mode"
+    );
+  });
+
+  it("implementation-agent contains promote step", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("promote-agent") && content.includes("Promote"),
+      "implementation-agent should contain promote step"
+    );
+  });
+
+  it("implementation-agent contains cleanup step", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("Cleanup") && content.includes("manifest.json"),
+      "implementation-agent should contain cleanup step with manifest update"
+    );
+  });
+
+  it("implementation-agent enforces information barriers", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("NEVER pass holdout") && content.includes("code-agent"),
+      "implementation-agent must forbid passing holdout to code-agent"
+    );
+    assert.ok(
+      content.includes("NEVER pass public") && content.includes("test-agent"),
+      "implementation-agent must forbid passing public to test-agent"
+    );
+    assert.ok(
+      content.includes("NEVER pass test/scenario") && content.includes("architect-agent"),
+      "implementation-agent must forbid passing test content to architect-agent"
+    );
+  });
+});
+
 describe("Plugin mirrors for codemap-agent", () => {
   it("plugins codemap-agent.md matches source", () => {
     const source = fs.readFileSync(
@@ -2225,5 +2308,47 @@ describe("Plugin mirrors for codemap-agent", () => {
       "utf8"
     );
     assert.equal(source, plugin, "Plugin onboard-agent.md should match source");
+  });
+});
+
+// ===========================================================================
+// Token cap tests for implementation-agent and orchestrate
+// ===========================================================================
+
+describe("Token cap enforcement", () => {
+  it("implementation-agent is under 4,000 tokens", () => {
+    const content = readAgent("implementation-agent");
+    const tokens = Math.ceil(Buffer.byteLength(content, "utf8") / 4);
+    assert.ok(
+      tokens <= 4000,
+      `implementation-agent is ${tokens} tokens, cap is 4,000`
+    );
+  });
+
+  it("df-orchestrate is under 5,000 tokens", () => {
+    const content = readSkill("df-orchestrate");
+    const tokens = Math.ceil(Buffer.byteLength(content, "utf8") / 4);
+    assert.ok(
+      tokens <= 5000,
+      `df-orchestrate is ${tokens} tokens, cap is 5,000`
+    );
+  });
+});
+
+// ===========================================================================
+// Plugin mirror for implementation-agent
+// ===========================================================================
+
+describe("Plugin mirror for implementation-agent", () => {
+  it("plugins implementation-agent.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, ".claude", "agents", "implementation-agent.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "agents", "implementation-agent.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin implementation-agent.md should match source");
   });
 });

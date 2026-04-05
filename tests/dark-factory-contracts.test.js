@@ -160,26 +160,38 @@ describe("Cross-agent contracts", () => {
   });
 
   // -------------------------------------------------------------------------
-  // Handoff 5: df-orchestrate -> architect-agent (domain parameter)
+  // Handoff 5: df-orchestrate -> implementation-agent -> architect-agent
   // -------------------------------------------------------------------------
-  describe("df-orchestrate -> architect-agent (domain parameter)", () => {
-    it("df-orchestrate passes domain parameter to architect-agent", () => {
+  describe("df-orchestrate -> implementation-agent (per-spec lifecycle)", () => {
+    it("df-orchestrate spawns implementation-agent for per-spec lifecycle", () => {
       const orch = readSkill("df-orchestrate");
       assert.ok(
-        orch.includes("domain parameter"),
-        "df-orchestrate should pass domain parameter"
+        orch.includes("implementation-agent.md"),
+        "df-orchestrate should reference implementation-agent.md"
       );
       assert.ok(
-        orch.includes("Security & Data Integrity"),
-        "df-orchestrate should pass Security domain"
+        orch.includes("architect review") || orch.includes("Architect review"),
+        "df-orchestrate should mention implementation-agent handles architect review"
+      );
+    });
+
+    it("implementation-agent spawns architect-agents with domain parameter", () => {
+      const impl = readAgent("implementation-agent");
+      assert.ok(
+        impl.includes("domain parameter") || impl.includes("domain"),
+        "implementation-agent should pass domain parameter to architect-agents"
       );
       assert.ok(
-        orch.includes("Architecture & Performance"),
-        "df-orchestrate should pass Architecture domain"
+        impl.includes("Security & Data Integrity"),
+        "implementation-agent should pass Security domain"
       );
       assert.ok(
-        orch.includes("API Design & Backward Compatibility"),
-        "df-orchestrate should pass API domain"
+        impl.includes("Architecture & Performance"),
+        "implementation-agent should pass Architecture domain"
+      );
+      assert.ok(
+        impl.includes("API Design & Backward Compatibility"),
+        "implementation-agent should pass API domain"
       );
     });
 
