@@ -2065,3 +2065,191 @@ describe("Wave automation — rules and progress reporting", () => {
     );
   });
 });
+
+// ===========================================================================
+// 21. Org-model Phase 1 — Template extraction
+// ===========================================================================
+
+describe("Template files exist and contain expected content", () => {
+  const TEMPLATES_DIR = path.join(ROOT, "dark-factory", "templates");
+
+  it("dark-factory/templates/ directory exists", () => {
+    assert.ok(
+      fs.existsSync(TEMPLATES_DIR),
+      "dark-factory/templates/ directory should exist"
+    );
+  });
+
+  it("spec-template.md exists and contains key sections", () => {
+    const filePath = path.join(TEMPLATES_DIR, "spec-template.md");
+    assert.ok(fs.existsSync(filePath), "spec-template.md should exist");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.includes("# Feature: {name}"), "Should contain Feature header");
+    assert.ok(content.includes("## Context"), "Should contain Context section");
+    assert.ok(content.includes("## Scope"), "Should contain Scope section");
+    assert.ok(content.includes("## Requirements"), "Should contain Requirements section");
+    assert.ok(content.includes("## Business Rules"), "Should contain Business Rules section");
+    assert.ok(content.includes("## Edge Cases"), "Should contain Edge Cases section");
+    assert.ok(content.includes("## Migration & Deployment"), "Should contain Migration section");
+  });
+
+  it("debug-report-template.md exists and contains key sections", () => {
+    const filePath = path.join(TEMPLATES_DIR, "debug-report-template.md");
+    assert.ok(fs.existsSync(filePath), "debug-report-template.md should exist");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.includes("# Debug Report: {name}"), "Should contain Debug Report header");
+    assert.ok(content.includes("## Symptom"), "Should contain Symptom section");
+    assert.ok(content.includes("## Root Cause"), "Should contain Root Cause section");
+    assert.ok(content.includes("## Impact Analysis"), "Should contain Impact Analysis section");
+    assert.ok(content.includes("## Systemic Analysis"), "Should contain Systemic Analysis section");
+    assert.ok(content.includes("## Regression Risk Assessment"), "Should contain Regression Risk section");
+  });
+
+  it("project-profile-template.md exists and contains key sections", () => {
+    const filePath = path.join(TEMPLATES_DIR, "project-profile-template.md");
+    assert.ok(fs.existsSync(filePath), "project-profile-template.md should exist");
+    const content = fs.readFileSync(filePath, "utf8");
+    assert.ok(content.includes("# Project Profile"), "Should contain Project Profile header");
+    assert.ok(content.includes("## Overview"), "Should contain Overview section");
+    assert.ok(content.includes("## Tech Stack"), "Should contain Tech Stack section");
+    assert.ok(content.includes("## Architecture"), "Should contain Architecture section");
+    assert.ok(content.includes("## Testing"), "Should contain Testing section");
+    assert.ok(content.includes("## Structural Notes"), "Should contain Structural Notes section");
+  });
+});
+
+describe("Agents reference template files instead of embedding them", () => {
+  it("spec-agent.md references spec-template.md", () => {
+    const content = readAgent("spec-agent");
+    assert.ok(
+      content.includes("dark-factory/templates/spec-template.md"),
+      "spec-agent should reference dark-factory/templates/spec-template.md"
+    );
+  });
+
+  it("debug-agent.md references debug-report-template.md", () => {
+    const content = readAgent("debug-agent");
+    assert.ok(
+      content.includes("dark-factory/templates/debug-report-template.md"),
+      "debug-agent should reference dark-factory/templates/debug-report-template.md"
+    );
+  });
+
+  it("onboard-agent.md references project-profile-template.md", () => {
+    const content = readAgent("onboard-agent");
+    assert.ok(
+      content.includes("dark-factory/templates/project-profile-template.md"),
+      "onboard-agent should reference dark-factory/templates/project-profile-template.md"
+    );
+  });
+
+  it("spec-agent.md does not contain the full inline spec template", () => {
+    const content = readAgent("spec-agent");
+    // The inline template had this distinctive table that should now be in the template file only
+    assert.ok(
+      !content.includes("| POST | /api/v1/... | ... | role |"),
+      "spec-agent should not contain the inline spec template API table"
+    );
+  });
+
+  it("debug-agent.md does not contain the full inline debug report template", () => {
+    const content = readAgent("debug-agent");
+    // The inline template had this distinctive section
+    assert.ok(
+      !content.includes("## Regression Risk Assessment"),
+      "debug-agent should not contain the inline debug report Regression Risk Assessment section"
+    );
+  });
+
+  it("onboard-agent.md does not contain the full inline profile template", () => {
+    const content = readAgent("onboard-agent");
+    // The inline template had this distinctive section
+    assert.ok(
+      !content.includes("## Authentication & Authorization Model"),
+      "onboard-agent should not contain the inline profile Authentication section"
+    );
+  });
+});
+
+describe("Token cap assertions (Phase 1 — template extraction)", () => {
+  function tokenCount(content) {
+    return Math.ceil(content.length / 4);
+  }
+
+  it("debug-agent.md is under 3,000 token cap", () => {
+    const content = readAgent("debug-agent");
+    const tokens = tokenCount(content);
+    assert.ok(
+      tokens <= 3000,
+      `debug-agent.md has ${tokens} tokens, exceeds 3,000 cap`
+    );
+  });
+
+  it("spec-agent.md token count decreased after template extraction", () => {
+    const content = readAgent("spec-agent");
+    const tokens = tokenCount(content);
+    // Original was ~5,124 tokens. After removing spec template (~1,200 tokens worth),
+    // should be under ~4,500. Final 4,000 cap reached after Phase 4 shared rules extraction.
+    assert.ok(
+      tokens < 5124,
+      `spec-agent.md has ${tokens} tokens, should be less than original 5,124`
+    );
+  });
+
+  it("onboard-agent.md token count decreased after template extraction", () => {
+    const content = readAgent("onboard-agent");
+    const tokens = tokenCount(content);
+    // Original was ~6,674 tokens. After removing profile template (~2,000 tokens worth),
+    // should be under ~5,500. Final 4,000 cap reached after Phase 2 codemap extraction.
+    assert.ok(
+      tokens < 6674,
+      `onboard-agent.md has ${tokens} tokens, should be less than original 6,674`
+    );
+  });
+});
+
+describe("Plugin template mirrors", () => {
+  it("plugins/dark-factory/templates/ directory exists", () => {
+    const pluginTemplatesDir = path.join(ROOT, "plugins", "dark-factory", "templates");
+    assert.ok(
+      fs.existsSync(pluginTemplatesDir),
+      "plugins/dark-factory/templates/ directory should exist"
+    );
+  });
+
+  it("plugin spec-template.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "templates", "spec-template.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "templates", "spec-template.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin spec-template.md should match source");
+  });
+
+  it("plugin debug-report-template.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "templates", "debug-report-template.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "templates", "debug-report-template.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin debug-report-template.md should match source");
+  });
+
+  it("plugin project-profile-template.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "templates", "project-profile-template.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "templates", "project-profile-template.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin project-profile-template.md should match source");
+  });
+});
