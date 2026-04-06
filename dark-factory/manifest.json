@@ -1,23 +1,5 @@
 {
   "features": {
-    "event-ingestion": {
-      "type": "feature",
-      "status": "active",
-      "specPath": "dark-factory/specs/features/event-ingestion.spec.md",
-      "created": "2026-04-06T00:00:00.000Z",
-      "rounds": 0,
-      "group": null,
-      "dependencies": ["auth"]
-    },
-    "dashboard-core": {
-      "type": "feature",
-      "status": "active",
-      "specPath": "dark-factory/specs/features/dashboard-core.spec.md",
-      "created": "2026-04-06T00:00:00.000Z",
-      "rounds": 0,
-      "group": null,
-      "dependencies": ["auth"]
-    },
     "developer-management": {
       "type": "feature",
       "status": "active",
@@ -25,7 +7,7 @@
       "created": "2026-04-06T00:00:00.000Z",
       "rounds": 0,
       "group": null,
-      "dependencies": ["auth", "dashboard-core"]
+      "dependencies": []
     },
     "event-explorer": {
       "type": "feature",
@@ -34,7 +16,7 @@
       "created": "2026-04-06T00:00:00.000Z",
       "rounds": 0,
       "group": null,
-      "dependencies": ["auth", "dashboard-core", "event-ingestion"]
+      "dependencies": []
     }
   }
 }
