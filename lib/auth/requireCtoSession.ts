@@ -7,7 +7,10 @@
  * Returns a 401 NextResponse if:
  *   - the cookie is absent
  *   - the session row does not exist or is expired
+ *
+ * Returns a 500 NextResponse (corrupt: true) if:
  *   - the session row exists but the associated user row is gone (orphaned session)
+ *   - this signals a data integrity issue, not an auth failure (FR-14)
  */
 
 import { cookies } from "next/headers";
@@ -21,9 +24,16 @@ export type CtoSession = {
   orgId: string;
 };
 
+/**
+ * SessionResult discriminated union:
+ * - ok: true  → session resolved successfully; use result.session
+ * - ok: false → auth or data error; return result.response to the client
+ *   - corrupt: true  → data integrity issue (orphaned user); route should return 500
+ *   - corrupt: false → normal auth failure (missing/expired session); route/layout returns 401
+ */
 type SessionResult =
   | { ok: true; session: CtoSession }
-  | { ok: false; response: NextResponse };
+  | { ok: false; corrupt: boolean; response: NextResponse };
 
 const COOKIE_NAME = "__Host-session";
 
@@ -44,7 +54,8 @@ export async function requireCtoSession(): Promise<SessionResult> {
   if (!token) {
     return {
       ok: false,
-      response: NextResponse.json({ error: "unauthorized" }, { status: 401 }),
+      corrupt: false,
+      response: NextResponse.json({ error: "Unauthorized." }, { status: 401 }),
     };
   }
 
@@ -61,7 +72,8 @@ export async function requireCtoSession(): Promise<SessionResult> {
   if (!sessionRow) {
     return {
       ok: false,
-      response: NextResponse.json({ error: "unauthorized" }, { status: 401 }),
+      corrupt: false,
+      response: NextResponse.json({ error: "Unauthorized." }, { status: 401 }),
     };
   }
 
@@ -73,9 +85,12 @@ export async function requireCtoSession(): Promise<SessionResult> {
     .get();
 
   if (!userRow) {
+    // Session row exists but the referenced user is gone — data integrity issue (FR-14).
+    // Return corrupt: true so route handlers can distinguish this from a normal auth failure.
     return {
       ok: false,
-      response: NextResponse.json({ error: "unauthorized" }, { status: 401 }),
+      corrupt: true,
+      response: NextResponse.json({ error: "Session data corrupt." }, { status: 500 }),
     };
   }
 
