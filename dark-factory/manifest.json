@@ -1,13 +1,3 @@
 {
-  "features": {
-    "cli-event-logging": {
-      "type": "feature",
-      "status": "active",
-      "specPath": "dark-factory/specs/features/cli-event-logging.spec.md",
-      "created": "2026-04-07T00:00:00.000Z",
-      "rounds": 0,
-      "group": null,
-      "dependencies": []
-    }
-  }
+  "features": {}
 }
