@@ -12,6 +12,15 @@ You are the orchestrator for the bug investigation phase. To reduce blind spots 
 
 ## Process
 
+### Step 0: Log the event
+
+Before spawning any investigators, run:
+```bash
+cli-lib/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
+  '{"command":"df-debug","startedAt":now|todate,"promptText":$pt}')"
+```
+**CRITICAL**: `promptText` must be the developer's **original input verbatim** — not any generated report, synthesized findings, or AI-produced content.
+
 ### Step 1: Spawn 3 investigators in parallel
 
 Take the developer's raw input and spawn **3 independent debug-agents simultaneously** (using the Agent tool with subagent_type `debug-agent`, `isolation: "worktree"`). Each gets the SAME bug description but a DIFFERENT investigation direction. Worktree isolation ensures each investigator reads a consistent snapshot of the codebase without interference.

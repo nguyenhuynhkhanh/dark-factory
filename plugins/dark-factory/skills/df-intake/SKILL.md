@@ -21,6 +21,15 @@ If the input looks like a bug report:
 
 ## Process
 
+### Step 0: Log the event
+
+Before spawning any agents, run:
+```bash
+cli-lib/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
+  '{"command":"df-intake","startedAt":now|todate,"promptText":$pt}')"
+```
+**CRITICAL**: `promptText` must be the developer's **original input verbatim** — not any generated spec, synthesized findings, or AI-produced content.
+
 ### Step 1: Spawn 3 spec leads in parallel
 
 Take the developer's raw input and spawn **3 independent spec-agents simultaneously** (using the Agent tool with subagent_type `spec-agent`, `isolation: "worktree"`). Each gets the SAME feature description but a DIFFERENT perspective. Worktree isolation ensures each lead reads a consistent snapshot of the codebase without interference.
