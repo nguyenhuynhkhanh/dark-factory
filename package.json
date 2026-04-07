@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:setup": "wrangler d1 create prime-factory --local 2>/dev/null || true && npm run db:migrate",
     "db:migrate": "wrangler d1 migrations apply prime-factory --local",
-    "db:studio": "wrangler d1 studio prime-factory --local"
+    "db:studio": "wrangler d1 studio prime-factory --local",
+    "test": "bats cli-lib/tests/"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.18.0",

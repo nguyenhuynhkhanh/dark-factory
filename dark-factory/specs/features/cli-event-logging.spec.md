@@ -51,9 +51,9 @@ If event volume grows and sequential flushing becomes a bottleneck, the queue ca
 - FR-7: On HTTP 4xx (including 401, 400), the event is silently dropped. It is NOT written to the queue. 4xx responses are terminal — they will never succeed on retry.
 - FR-8: On any network error (curl non-zero exit) OR HTTP 5xx, the event is appended to the offline queue for retry on the next invocation.
 - FR-9: The queue file format is: `{ "version": 1, "events": [ { "queuedAt": "<ISO 8601>", "payload": { ... } } ] }`.
-- FR-10: If `~/.df-factory/` directory does not exist, the script creates it before writing the queue file.
-- FR-11: All queue read and write operations must be protected by an exclusive `flock` lock on the queue file, preventing concurrent corruption when multiple sub-agents run in parallel.
-- FR-12: If the queue file exists but contains invalid JSON, the script treats it as empty and resets it. Corrupted data is discarded rather than blocking delivery.
+- FR-10: If `~/.df-factory/` directory does not exist, the script creates it with `mkdir -p -m 0700` before writing the queue file. The queue file must be written with permissions `0600` to restrict access to the owning user (the directory contains the API key in `config.json`).
+- FR-11: All queue read and write operations must be protected by an exclusive `flock` lock on a dedicated lock file `~/.df-factory/event-queue.lock` (never renamed or replaced). The pattern is `( flock -x 200; <operations> ) 200>>"$LOCK_FILE"`. The queue **data** file (`event-queue.json`) must NOT be the flock target, because the atomic `mv` rename creates a new inode and silently breaks mutual exclusion for subsequent openers. Two-phase locking is required: (1) lock → read queue into memory → unlock; (2) perform all curl calls without holding the lock; (3) lock → write updated queue → unlock.
+- FR-12: If the queue file exists but contains invalid JSON OR has a `version` field that is not `1`, the script treats it as empty and resets it. Corrupted data and unknown future formats are discarded rather than blocking delivery.
 - FR-13: On flush, the script iterates over queued events and attempts to POST each one individually. Events that succeed are removed. Events that fail (network error or 5xx) are kept. Events that receive 4xx during flush are dropped (not re-queued).
 - FR-14: The script must produce zero output on stdout and stderr under all conditions, including errors.
 - FR-15: The script must always exit with code 0, including on all error paths.
@@ -62,7 +62,7 @@ If event volume grows and sequential flushing becomes a bottleneck, the queue ca
 ### Non-Functional
 
 - NFR-1: The script must have no runtime dependencies beyond `curl`, `jq`, and standard POSIX/bash utilities (`flock`, `mktemp`, `date`). These are assumed present in the developer environment.
-- NFR-2: The script must be POSIX-compatible bash (`#!/usr/bin/env bash`). No bash 4+ array features that fail on macOS default bash (3.2). Note: `flock` IS available on macOS via `util-linux` (homebrew) and is standard on Linux.
+- NFR-2: The script must be POSIX-compatible bash (`#!/usr/bin/env bash`). No bash 4+ array features that fail on macOS default bash (3.2). Note: `flock` IS available on macOS via `util-linux` (homebrew) and is standard on Linux. If `flock` is not installed, the script falls back to unguarded writes (check `command -v flock`). This is a known limitation on bare macOS installs — concurrent queue safety requires Homebrew `util-linux`.
 - NFR-3: Tests use bats-core. Install instructions must be documented in `package.json` (as a comment or in a README note). The `test` script runs `bats cli-lib/tests/`.
 
 ---
@@ -168,7 +168,7 @@ Sub-agents spawned by df-cleanup: `cleanup-agent`.
 - BR-4: **Flush before send.** The current event is sent AFTER all queued events are attempted. This preserves temporal order in the CTO dashboard.
 - BR-5: **Partial flush is acceptable.** On flush, events that succeed are removed; events that fail stay. The queue never grows beyond what genuinely cannot be delivered.
 - BR-6: **Corrupted queue is reset.** If the queue file contains invalid JSON, the script discards it and treats the queue as empty. Blocking delivery indefinitely because of a corrupted file is worse than losing queued events.
-- BR-7: **Exclusive locking required.** Because multiple sub-agents may call `log-event.sh` concurrently (e.g. df-orchestrate spawning architect-agent, code-agent, test-agent simultaneously), the queue file must be exclusively locked during the entire read-modify-write cycle.
+- BR-7: **Exclusive locking required.** Because multiple sub-agents may call `log-event.sh` concurrently (e.g. df-orchestrate spawning architect-agent, code-agent, test-agent simultaneously), the queue file must be exclusively locked during file I/O. A **dedicated lock file** (`event-queue.lock`) must be used — never the queue data file itself — because atomic `mv` creates a new inode and breaks flock's mutual exclusion. The lock must only be held during file reads and writes, NOT during curl network calls (two-phase locking).
 - BR-8: **Script never blocks the caller.** The script must exit 0 regardless of outcome. Any error (missing config, network down, malformed queue) is silently absorbed.
 - BR-9: **queuedAt is set at queue time, not at event creation time.** The original `startedAt` in the payload is preserved verbatim; `queuedAt` records when the queuing happened.
 
@@ -229,6 +229,7 @@ Sub-agents spawned by df-cleanup: `cleanup-agent`.
 - EC-12: The script is called with no arguments. It must exit 0 silently. (Callers should always pass a payload, but a missing argument must not crash the script.)
 - EC-13: The script is called while offline (DNS unreachable). Curl exits non-zero with connection refused or timeout. Event is queued.
 - EC-14: On flush, a previously queued event receives a 4xx (e.g. the command field was somehow invalid). That entry is dropped; it does not block the rest of the flush.
+- EC-15: If the developer's system clock is more than 1 hour ahead of real time, the server returns HTTP 400 for the `startedAt` field. Since 4xx → drop (never queue), events are permanently and silently lost. This is an accepted v1 limitation. No client-side clock validation is added.
 
 ---
 
@@ -257,14 +258,26 @@ The config file (`~/.df-factory/config.json`) is created by `df-onboard`. This s
 ## Implementation Notes
 
 - Use `#!/usr/bin/env bash` at the top. Set `set -euo pipefail` is NOT recommended here because the script must never exit non-zero — use explicit error handling instead.
-- Use `exec 2>/dev/null` or redirect stderr on all individual commands to enforce silence.
 - Redirect ALL output at the top of the script: `exec >/dev/null 2>&1`
 - Use `curl --silent --output /dev/null --write-out "%{http_code}" --max-time 5` to capture only the HTTP status code.
 - Use `jq -r '.apiKey // empty'` to extract the API key (returns empty string if absent or null).
-- For `flock`: the pattern is `( flock -x 200; <operations> ) 200>>"$QUEUE_FILE"`. Open the lock file with `>>` (append, creates if absent) on file descriptor 200.
+- **flock pattern — use a dedicated lock file, never the queue data file:**
+  ```bash
+  LOCK_FILE="$HOME/.df-factory/event-queue.lock"
+  QUEUE_FILE="$HOME/.df-factory/event-queue.json"
+  # Phase 1: lock → read → unlock
+  queued_events=$(flock -x "$LOCK_FILE" jq -c '.events // []' "$QUEUE_FILE" 2>/dev/null || echo '[]')
+  # ... perform curl calls without holding lock ...
+  # Phase 2: lock → write result → unlock
+  ( flock -x 200; <write updated json to QUEUE_FILE via temp file> ) 200>>"$LOCK_FILE"
+  ```
+  Alternative one-liner form: `flock -x "$LOCK_FILE" bash -c '...'`
+- **Two-phase locking is mandatory**: hold the lock only during file I/O, release it before any curl call. A 50-event queue × 5 s curl timeout would otherwise hold the lock for ~255 s.
+- **Atomic write**: use `mktemp "$HOME/.df-factory/.queue-tmp.XXXXXXXX"` (same filesystem as queue file, not `/tmp`) then `mv` the temp file over the queue file. This ensures same-filesystem atomic rename.
+- **Directory and file creation**: `mkdir -p -m 0700 "$HOME/.df-factory/"` and after writing the queue file set `chmod 0600 "$QUEUE_FILE"`.
 - `date -u +"%Y-%m-%dT%H:%M:%S.000Z"` produces a compatible ISO 8601 timestamp on both macOS and Linux.
-- When appending to the queue, read the current contents, use `jq` to add the new entry, then write the updated JSON back atomically using a temp file + `mv`.
-- The flush loop should iterate over queue indices with `jq -c '.events[]'` or by index. After attempting each event, rebuild the queue from the entries that remain (failed or not-yet-attempted).
+- The flush loop should collect all events into memory (under lock), release the lock, attempt curl for each event, track which indices failed, then re-acquire lock and write only the failed events back.
+- **All variable expansions carrying user data** (`$PAYLOAD`, `$API_KEY`, event payload strings) must use double-quoted form in every `jq` and `curl` invocation to prevent word-splitting and shell injection.
 - The bats test file should use `setup` to create a temp `HOME` directory so tests are hermetic and never touch the real `~/.df-factory/`. Override `HOME` in each test.
 
 ---
