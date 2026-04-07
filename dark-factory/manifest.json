@@ -1,16 +1,5 @@
 {
   "features": {
-    "api-key-management-server": {
-      "type": "feature",
-      "status": "active",
-      "specPath": "dark-factory/specs/features/api-key-management-server.spec.md",
-      "created": "2026-04-07T00:00:00.000Z",
-      "rounds": 0,
-      "group": "api-key-management",
-      "dependencies": [
-        "api-key-management-data"
-      ]
-    },
     "api-key-management-ui": {
       "type": "feature",
       "status": "active",
