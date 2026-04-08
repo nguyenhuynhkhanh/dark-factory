@@ -13,7 +13,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { requireCtoSession } from "@/lib/auth/requireCtoSession";
 import {
   InstallsPageClient,
@@ -29,11 +29,9 @@ interface InstallsApiResponse {
 // ─── Data Fetching ────────────────────────────────────────────────────────────
 
 async function fetchInstalls(
+  baseUrl: string,
   cookieHeader: string
 ): Promise<DashboardInstall[]> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-
   const res = await fetch(`${baseUrl}/api/v1/dashboard/installs`, {
     headers: { cookie: cookieHeader },
     cache: "no-store",
@@ -59,6 +57,10 @@ export default async function InstallsPage(): Promise<React.ReactElement> {
   const { orgId } = sessionResult.session;
 
   // Forward the session cookie to the internal API (NFR-3).
+  const headerStore = await headers();
+  const host = headerStore.get("host") ?? "localhost:3000";
+  const proto = host.startsWith("localhost") ? "http" : "https";
+  const baseUrl = `${proto}://${host}`;
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
     .getAll()
@@ -67,7 +69,7 @@ export default async function InstallsPage(): Promise<React.ReactElement> {
 
   let installs: DashboardInstall[];
   try {
-    installs = await fetchInstalls(cookieHeader);
+    installs = await fetchInstalls(baseUrl, cookieHeader);
   } catch {
     // NFR-4: render error state rather than crash.
     return (

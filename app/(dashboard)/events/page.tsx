@@ -9,7 +9,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { requireCtoSession } from "@/lib/auth/requireCtoSession";
 import { LocalTimestamp } from "@/app/(dashboard)/_components/LocalTimestamp";
 import { EventFilters } from "./_components/EventFilters";
@@ -113,6 +113,11 @@ export default async function EventsPage({
   apiParams.set("page", String(page));
   if (limitStr) apiParams.set("limit", limitStr);
 
+  const headerStore = await headers();
+  const host = headerStore.get("host") ?? "localhost:3000";
+  const proto = host.startsWith("localhost") ? "http" : "https";
+  const baseUrl = `${proto}://${host}`;
+
   // Forward cookies to the internal API calls (session auth).
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
@@ -120,7 +125,7 @@ export default async function EventsPage({
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const baseUrl = `${proto}://${host}`;
 
   // Fetch events and installs in parallel.
   let eventsData: EventsResponse | null = null;
