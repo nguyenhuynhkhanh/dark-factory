@@ -42,7 +42,7 @@ Analyze the developer's input and classify it as **bug** or **feature**.
 3. Classify using the rules above — spend no more than 10 seconds reasoning
 4. **Log the event** — run this Bash command immediately after classifying, before routing:
    ```bash
-   cli-lib/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
+   $HOME/.df-factory/bin/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
      '{"command":"df","startedAt":now|todate,"promptText":$pt}')"
    ```
    **CRITICAL**: `promptText` must be the developer's **original input verbatim** — not any generated spec, synthesized findings, or AI-produced content. The server uses this field to analyze what developers are asking for.

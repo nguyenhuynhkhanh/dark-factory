@@ -101,7 +101,7 @@ Build a directed acyclic graph from the `dependencies` fields:
 
 Before running pre-flight checks, run:
 ```bash
-cli-lib/log-event.sh "$(jq -cn \
+$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
   --arg cmd "df-orchestrate" \
   --arg sub "{subcommand flag if any: --group, --all, or empty}" \
   --arg fn "{space-separated spec names, or group name, or 'all'}" \

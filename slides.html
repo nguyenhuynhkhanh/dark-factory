@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Factory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f4f1;
+    --surface: #fff;
+    --surface-2: #eeedea;
+    --border: #ddd;
+    --border-active: #bbb;
+    --text: #111;
+    --text-dim: #333;
+    --text-muted: #666;
+    --accent: #1a1a1a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --red: #c33;
+    --green: #2a7a2a;
+    --amber: #b58300;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow: hidden;
+    height: 100dvh;
+    width: 100dvw;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Slide Container ── */
+  .deck {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 6vh 8vw;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  /* ── Staggered entrance for children ── */
+  .slide > * {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .slide.active > * {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .slide.active > *:nth-child(1) { transition-delay: 0.05s; }
+  .slide.active > *:nth-child(2) { transition-delay: 0.12s; }
+  .slide.active > *:nth-child(3) { transition-delay: 0.19s; }
+  .slide.active > *:nth-child(4) { transition-delay: 0.26s; }
+  .slide.active > *:nth-child(5) { transition-delay: 0.33s; }
+  .slide.active > *:nth-child(6) { transition-delay: 0.40s; }
+  .slide.active > *:nth-child(7) { transition-delay: 0.47s; }
+
+  /* ── Staggered items within grids/lists ── */
+  .slide .barrier-card,
+  .slide .decision-item,
+  .slide .pipeline-stage,
+  .slide .flow-step,
+  .slide .cmd-block,
+  .slide .install-block,
+  .slide .phase {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .slide.active .barrier-card,
+  .slide.active .decision-item,
+  .slide.active .pipeline-stage,
+  .slide.active .flow-step,
+  .slide.active .cmd-block,
+  .slide.active .install-block,
+  .slide.active .phase {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .slide.active .barrier-card:nth-child(1),
+  .slide.active .decision-item:nth-child(1),
+  .slide.active .pipeline-stage:nth-child(1),
+  .slide.active .flow-step:nth-child(1),
+  .slide.active .cmd-block:nth-of-type(1),
+  .slide.active .install-block:nth-of-type(1),
+  .slide.active .phase:nth-of-type(1) { transition-delay: 0.2s; }
+
+  .slide.active .barrier-card:nth-child(2),
+  .slide.active .decision-item:nth-child(2),
+  .slide.active .pipeline-stage:nth-child(2),
+  .slide.active .flow-step:nth-child(2),
+  .slide.active .cmd-block:nth-of-type(2),
+  .slide.active .install-block:nth-of-type(2),
+  .slide.active .phase:nth-of-type(2) { transition-delay: 0.3s; }
+
+  .slide.active .barrier-card:nth-child(3),
+  .slide.active .decision-item:nth-child(3),
+  .slide.active .pipeline-stage:nth-child(3),
+  .slide.active .flow-step:nth-child(3),
+  .slide.active .cmd-block:nth-of-type(3) { transition-delay: 0.4s; }
+
+  .slide.active .barrier-card:nth-child(4),
+  .slide.active .decision-item:nth-child(4),
+  .slide.active .pipeline-stage:nth-child(4),
+  .slide.active .flow-step:nth-child(4) { transition-delay: 0.5s; }
+
+  .slide.active .decision-item:nth-child(5),
+  .slide.active .pipeline-stage:nth-child(5),
+  .slide.active .flow-step:nth-child(5) { transition-delay: 0.6s; }
+
+  .slide.active .decision-item:nth-child(6),
+  .slide.active .pipeline-stage:nth-child(6) { transition-delay: 0.7s; }
+
+  .slide.active .decision-item:nth-child(7) { transition-delay: 0.8s; }
+  .slide.active .decision-item:nth-child(8) { transition-delay: 0.9s; }
+
+  /* ── List item stagger ── */
+  .slide ul li {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .slide.active ul li { opacity: 1; transform: translateX(0); }
+  .slide.active ul li:nth-child(1) { transition-delay: 0.15s; }
+  .slide.active ul li:nth-child(2) { transition-delay: 0.22s; }
+  .slide.active ul li:nth-child(3) { transition-delay: 0.29s; }
+  .slide.active ul li:nth-child(4) { transition-delay: 0.36s; }
+  .slide.active ul li:nth-child(5) { transition-delay: 0.43s; }
+  .slide.active ul li:nth-child(6) { transition-delay: 0.50s; }
+  .slide.active ul li:nth-child(7) { transition-delay: 0.57s; }
+
+  /* ── Table row stagger ── */
+  .slide tbody tr {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .slide.active tbody tr { opacity: 1; transform: translateY(0); }
+  .slide.active tbody tr:nth-child(1) { transition-delay: 0.2s; }
+  .slide.active tbody tr:nth-child(2) { transition-delay: 0.27s; }
+  .slide.active tbody tr:nth-child(3) { transition-delay: 0.34s; }
+  .slide.active tbody tr:nth-child(4) { transition-delay: 0.41s; }
+  .slide.active tbody tr:nth-child(5) { transition-delay: 0.48s; }
+  .slide.active tbody tr:nth-child(6) { transition-delay: 0.55s; }
+  .slide.active tbody tr:nth-child(7) { transition-delay: 0.62s; }
+
+  /* ── Flow arrows fade ── */
+  .slide .flow-arrow {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .slide.active .flow-arrow { opacity: 1; }
+  .slide.active .flow-arrow:nth-of-type(1) { transition-delay: 0.3s; }
+  .slide.active .flow-arrow:nth-of-type(2) { transition-delay: 0.4s; }
+  .slide.active .flow-arrow:nth-of-type(3) { transition-delay: 0.5s; }
+  .slide.active .flow-arrow:nth-of-type(4) { transition-delay: 0.6s; }
+
+  /* ── File tree lines ── */
+  .slide .file-tree {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+  }
+
+  .slide.active .file-tree {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Typography ── */
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(2.8rem, 5.5vw, 5rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+  }
+
+  .subtitle {
+    font-size: clamp(1.15rem, 2vw, 1.6rem);
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 42em;
+  }
+
+  .slide p {
+    font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+    color: var(--text-dim);
+    line-height: 1.65;
+    max-width: 48em;
+  }
+
+  .slide p + p { margin-top: 0.8rem; }
+
+  /* ── Lists ── */
+  .slide ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: 52em;
+    text-align: left;
+  }
+
+  .slide ul li {
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    color: var(--text-dim);
+    line-height: 1.55;
+    padding-left: 1.4em;
+    position: relative;
+  }
+
+  .slide ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 5px;
+    height: 5px;
+    background: var(--text-muted);
+  }
+
+  .slide ul li strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Code / Mono blocks ── */
+  .diagram {
+    font-family: var(--mono);
+    font-size: clamp(0.72rem, 1.1vw, 0.92rem);
+    line-height: 1.6;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem 2rem;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 1rem 0;
+    max-width: fit-content;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  /* ── Tables ── */
+  .slide table {
+    border-collapse: collapse;
+    margin: 0.8rem 0;
+    width: 100%;
+    max-width: 56em;
+    text-align: left;
+  }
+
+  .slide th {
+    font-family: var(--mono);
+    font-size: clamp(0.8rem, 1vw, 0.95rem);
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .slide td {
+    font-size: clamp(1rem, 1.4vw, 1.2rem);
+    color: var(--text-dim);
+    padding: 0.75rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+    vertical-align: top;
+  }
+
+  .slide td:first-child {
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .slide tr:last-child td { border-bottom: none; }
+
+  /* ── Tags ── */
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 0.2em 0.6em;
+    border-radius: 3px;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  .tag--red { color: var(--red); border: 1px solid var(--red); }
+  .tag--green { color: var(--green); border: 1px solid var(--green); }
+  .tag--dim { color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* ── Grid layouts ── */
+  .barrier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+    max-width: 56em;
+    text-align: left;
+    width: 100%;
+  }
+
+  .barrier-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem 1.4rem;
+  }
+
+  .barrier-card h3 {
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    color: var(--accent);
+  }
+
+  .barrier-card .sees,
+  .barrier-card .blocked {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .barrier-card .sees { color: var(--text-dim); }
+  .barrier-card .blocked { color: var(--text-muted); margin-top: 0.3rem; }
+
+  /* ── Flow diagrams ── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 1rem 0;
+    max-width: 44em;
+    text-align: left;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.7rem 0;
+  }
+
+  .flow-num {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    min-width: 1.4rem;
+    padding-top: 0.15rem;
+  }
+
+  .flow-line {
+    width: 1px;
+    background: var(--border);
+    min-height: 100%;
+    margin: 0 0.7rem;
+  }
+
+  .flow-content {
+    font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .flow-content strong { color: var(--text); font-weight: 600; }
+
+  .flow-arrow {
+    font-family: var(--mono);
+    color: var(--text-muted);
+    padding: 0 0 0 2.4rem;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  /* ── Phase blocks (red-green) ── */
+  .phase {
+    border-left: 3px solid;
+    padding: 0.8rem 1.2rem;
+    margin: 0.5rem 0;
+    max-width: 44em;
+    text-align: left;
+  }
+
+  .phase--red { border-color: var(--red); }
+  .phase--green { border-color: var(--green); }
+
+  .phase-label {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.3rem;
+  }
+
+  .phase--red .phase-label { color: var(--red); }
+  .phase--green .phase-label { color: var(--green); }
+
+  .phase p {
+    font-size: 1.15rem !important;
+    color: var(--text-dim) !important;
+  }
+
+  /* ── Command table for usage ── */
+  .cmd-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem 1.6rem;
+    margin: 0.6rem 0;
+    max-width: 48em;
+    text-align: left;
+    width: 100%;
+  }
+
+  .cmd-block .prompt {
+    font-family: var(--mono);
+    font-size: clamp(0.95rem, 1.3vw, 1.15rem);
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .cmd-block .prompt span { color: var(--text-muted); }
+  .cmd-block .prompt em {
+    font-style: normal;
+    color: var(--text);
+  }
+
+  .cmd-block .response {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Install block ── */
+  .install-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.4rem 1.8rem;
+    margin: 0.6rem 0;
+    max-width: 40em;
+    text-align: left;
+    width: 100%;
+  }
+
+  .install-block .label {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+  }
+
+  .install-block pre {
+    font-family: var(--mono);
+    font-size: clamp(1rem, 1.3vw, 1.15rem);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .install-block + .install-block { margin-top: 0.8rem; }
+
+  /* ── Progress bar ── */
+  .progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--text);
+    transition: width 0.35s ease;
+    z-index: 100;
+  }
+
+  /* ── Slide counter ── */
+  .counter {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 2rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    z-index: 100;
+  }
+
+  /* ── Title slide special ── */
+  .slide--title { justify-content: center; }
+
+  .slide--title h1 {
+    font-size: clamp(3rem, 7vw, 6rem);
+    margin-bottom: 1rem;
+  }
+
+  .slide--title .subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+  }
+
+  .slide--title .meta {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2.5rem;
+  }
+
+  /* ── Fullscreen button ── */
+  .fullscreen-btn {
+    position: fixed;
+    bottom: 1.4rem;
+    left: 2rem;
+    z-index: 100;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    padding: 0.35em 0.7em;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .fullscreen-btn:hover {
+    color: var(--text);
+    border-color: var(--border-active);
+  }
+
+  /* ── Section dividers ── */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .slide { padding: 4vh 6vw; }
+    .barrier-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── Decision grid ── */
+  .decision-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+    max-width: 58em;
+    text-align: left;
+    width: 100%;
+  }
+
+  .decision-item {
+    padding: 0.8rem 1rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .decision-item strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+
+  .decision-item span {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    line-height: 1.45;
+  }
+
+  /* ── Code map list ── */
+  .codemap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.5rem 2rem;
+    margin: 1rem 0;
+    max-width: 56em;
+    text-align: left;
+    width: 100%;
+  }
+
+  .codemap-grid li {
+    padding-left: 0 !important;
+  }
+
+  .codemap-grid li::before { display: none !important; }
+
+  .codemap-grid li .label {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    color: var(--text);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .codemap-grid li .desc {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+  }
+
+  /* ── Comparison table ── */
+  .slide td.win {
+    color: var(--text);
+    font-weight: 500;
+    background: rgba(42, 122, 42, 0.07);
+  }
+
+  .slide td.lose {
+    color: var(--text-muted);
+  }
+
+  .slide td .check {
+    color: var(--green);
+    font-weight: 600;
+    margin-right: 0.3em;
+  }
+
+  .slide td .miss {
+    color: var(--red);
+    font-weight: 600;
+    margin-right: 0.3em;
+  }
+
+  /* ── Pipeline flow (end-to-end) ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 60em;
+    margin: 0.5rem 0;
+  }
+
+  .pipeline-stage {
+    display: grid;
+    grid-template-columns: 9rem 1fr 1fr;
+    gap: 0 1.5rem;
+    align-items: start;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .pipeline-stage:last-child { border-bottom: none; }
+
+  .pipeline-cmd {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .pipeline-what {
+    font-size: 1.05rem;
+    color: var(--text-dim);
+    line-height: 1.45;
+  }
+
+  .pipeline-artifact {
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .pipeline-artifact em {
+    font-style: normal;
+    color: var(--text-dim);
+  }
+
+  .pipeline-header {
+    display: grid;
+    grid-template-columns: 9rem 1fr 1fr;
+    gap: 0 1.5rem;
+    padding: 0 0 0.5rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .pipeline-header span {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── File tree ── */
+  .file-tree {
+    font-family: var(--mono);
+    font-size: clamp(0.88rem, 1.2vw, 1.05rem);
+    line-height: 1.75;
+    color: var(--text-dim);
+    text-align: left;
+    max-width: 48em;
+    width: 100%;
+  }
+
+  .file-tree .dir {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .file-tree .comment {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .file-tree .temp {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- ═══════════ SLIDE 1: Title ═══════════ -->
+  <div class="slide slide--title active" data-slide="1">
+    <h1>Dark Factory</h1>
+    <p class="subtitle">Specs in, production-grade features out. A multi-agent framework for Claude Code where no single agent has the full picture &mdash; so no agent can cut corners.</p>
+    <p class="meta">Open Source &middot; MIT License &middot; github.com/nguyenhuynhkhanh/dark-factory</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 2: The Problem ═══════════ -->
+  <div class="slide" data-slide="2">
+    <div class="eyebrow">The problem</div>
+    <h2>AI writes code fast.<br>Fast code on a flawed spec is fast failure.</h2>
+    <table style="margin-top: 0.8rem;">
+      <thead>
+        <tr><th>Problem</th><th>What goes wrong</th><th>How Dark Factory solves it</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Scope guessing</td><td>AI assumes instead of researching</td><td>3 parallel spec leads research from different perspectives</td></tr>
+        <tr><td>No architecture review</td><td>Ships whatever compiles</td><td>Architect agent runs 3+ rounds of review before any code</td></tr>
+        <tr><td>Self-validating tests</td><td>Writes code and tests from the same understanding</td><td>Holdout scenarios &mdash; code-agent never sees its own tests</td></tr>
+        <tr><td>Symptom masking</td><td>Bug fixes that hide the real problem</td><td>Strict red-green: failing test first, then minimal fix</td></tr>
+        <tr><td>No codebase awareness</td><td>Doesn't know what it might break</td><td>Deep code map with dependency graph and blast radius</td></tr>
+        <tr><td>Context limits</td><td>Large features exceed a single conversation</td><td>Smart decomposition into dependency-aware parallel worktrees</td></tr>
+        <tr><td>Recurring bugs</td><td>Fixes don't stick, root cause never found</td><td>3 investigators + systemic analysis + annotated regression tests</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 3: Information Barriers ═══════════ -->
+  <div class="slide" data-slide="3">
+    <div class="eyebrow">Core innovation</div>
+    <h2>Information barriers</h2>
+    <p>Each agent has strict boundaries on what it can see. The code-agent must implement correctly to pass tests it has never seen.</p>
+
+    <div class="barrier-grid">
+      <div class="barrier-card">
+        <h3>Spec Agent</h3>
+        <div class="sees">Sees: codebase, docs, project profile</div>
+        <div class="blocked">Blocked: holdout scenarios, test results</div>
+      </div>
+      <div class="barrier-card">
+        <h3>Code Agent</h3>
+        <div class="sees">Sees: spec, public scenarios, architect findings</div>
+        <div class="blocked">Blocked: holdout scenarios, test results</div>
+      </div>
+      <div class="barrier-card">
+        <h3>Test Agent</h3>
+        <div class="sees">Sees: spec, holdout scenarios only</div>
+        <div class="blocked">Blocked: public scenarios, source code changes</div>
+      </div>
+      <div class="barrier-card">
+        <h3>Architect Agent</h3>
+        <div class="sees">Sees: spec, codebase, code map</div>
+        <div class="blocked">Blocked: all scenarios, all tests</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 4: The 7 Agents ═══════════ -->
+  <div class="slide" data-slide="4">
+    <div class="eyebrow">Architecture</div>
+    <h2>7 specialized agents</h2>
+    <table>
+      <thead>
+        <tr><th>Agent</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Onboard</td><td>Maps project architecture, conventions, quality bar + builds deep code map</td></tr>
+        <tr><td>Spec <span class="tag tag--dim">x3</span></td><td>3 parallel leads &mdash; user/product, architecture, reliability perspectives</td></tr>
+        <tr><td>Debug <span class="tag tag--dim">x3</span></td><td>3 parallel investigators &mdash; code path, history, pattern analysis</td></tr>
+        <tr><td>Architect</td><td>3 parallel domain reviews: security, architecture, API design</td></tr>
+        <tr><td>Code <span class="tag tag--dim">x1&ndash;4</span></td><td>Auto-scaled parallel implementation in worktree-isolated specs</td></tr>
+        <tr><td>Test</td><td>Validates with hidden holdout scenarios &mdash; unit tests + Playwright e2e</td></tr>
+        <tr><td>Promote</td><td>Moves holdout tests into permanent suite with root cause annotations</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 5: End-to-End Workflow ═══════════ -->
+  <div class="slide" data-slide="5">
+    <div class="eyebrow">End-to-end workflow</div>
+    <h2>From onboarding to production</h2>
+
+    <div class="pipeline">
+      <div class="pipeline-header">
+        <span>Phase</span>
+        <span>What happens</span>
+        <span>Artifacts produced</span>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-cmd">/df-onboard</div>
+        <div class="pipeline-what">Onboard-agent + parallel scanners map the codebase. Run once per project.</div>
+        <div class="pipeline-artifact"><em>project-profile.md</em><br><em>code-map.md</em><br><em>code-map.mermaid</em></div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-cmd">/df-intake</div>
+        <div class="pipeline-what">3 spec leads research in parallel. Synthesized into spec. Large features auto-decomposed into smaller specs with dependencies.</div>
+        <div class="pipeline-artifact"><em>specs/features/{name}.md</em><br><em>scenarios/public/{name}/</em><br><em>scenarios/holdout/{name}/</em><br><em>manifest.json</em> updated</div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-cmd">architect</div>
+        <div class="pipeline-what">3 parallel domain reviews (security, architecture, API). Minimum 3 rounds of refinement with spec-agent. Findings forwarded to code-agents.</div>
+        <div class="pipeline-artifact"><em>spec updated in-place</em><br><em>scenarios re-evaluated</em></div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-cmd">/df-orchestrate</div>
+        <div class="pipeline-what">Code-agents implement in isolated worktrees (1&ndash;4 per spec). Test-agent validates with holdout scenarios. Max 3 rounds.</div>
+        <div class="pipeline-artifact"><em>feature branch per spec</em><br><em>results/{name}/</em></div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-cmd">promote</div>
+        <div class="pipeline-what">Holdout tests adapted and moved into permanent test suite. Annotated with root cause, guarded locations, bug reference.</div>
+        <div class="pipeline-artifact"><em>tests in your test suite</em><br><em>manifest &rarr; promoted</em></div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-cmd">cleanup</div>
+        <div class="pipeline-what">All artifacts committed to git history then deleted. Manifest entry removed. Git history is the archive.</div>
+        <div class="pipeline-artifact"><em>specs/ cleared</em><br><em>scenarios/ cleared</em><br><em>manifest entry removed</em></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 6: Project Structure ═══════════ -->
+  <div class="slide" data-slide="6">
+    <div class="eyebrow">Artifacts</div>
+    <h2>Project structure</h2>
+    <p>Everything Dark Factory produces lives under <code>dark-factory/</code>. Temporary artifacts are deleted after promotion &mdash; git history is the permanent archive.</p>
+
+    <div class="file-tree" style="margin-top: 1rem;">
+      <span class="dir">dark-factory/</span><br>
+      &nbsp;&nbsp;<span class="dir">project-profile.md</span> <span class="comment">&larr; architecture, conventions, quality bar</span><br>
+      &nbsp;&nbsp;<span class="dir">code-map.md</span> <span class="comment">&larr; dependency graph, hotspots, entry points</span><br>
+      &nbsp;&nbsp;<span class="dir">code-map.mermaid</span> <span class="comment">&larr; visual diagram for humans</span><br>
+      &nbsp;&nbsp;<span class="dir">manifest.json</span> <span class="comment">&larr; active features only (cleaned up after promotion)</span><br>
+      <br>
+      &nbsp;&nbsp;<span class="dir">specs/</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="temp">features/{name}.md</span> <span class="comment">&larr; feature spec (temporary)</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="temp">bugfixes/{name}.md</span> <span class="comment">&larr; debug report (temporary)</span><br>
+      <br>
+      &nbsp;&nbsp;<span class="dir">scenarios/</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="temp">public/{name}/</span> <span class="comment">&larr; visible to code-agent</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="temp">holdout/{name}/</span> <span class="comment">&larr; hidden from code-agent, used by test-agent</span><br>
+      <br>
+      &nbsp;&nbsp;<span class="dir">results/</span> <span class="comment">&larr; test output (gitignored)</span><br>
+    </div>
+
+    <p style="margin-top: 1rem;"><strong>Lifecycle:</strong> &nbsp;active &rarr; passed &rarr; promoted &rarr; cleaned up (removed from manifest, artifacts in git history)</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 7: Feature Pipeline ═══════════ -->
+  <div class="slide" data-slide="7">
+    <div class="eyebrow">Feature pipeline</div>
+    <h2>Describe what you need. That's it.</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">01</div>
+        <div class="flow-content"><strong>3 spec leads</strong> research in parallel &mdash; user, architecture, reliability</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <div class="flow-num">02</div>
+        <div class="flow-content"><strong>Synthesize + decompose</strong> &mdash; large features auto-split into smaller specs with dependency ordering</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <div class="flow-num">03</div>
+        <div class="flow-content"><strong>Architect review</strong> &mdash; 3 parallel domain reviews (security, arch, API). No exceptions.</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <div class="flow-num">04</div>
+        <div class="flow-content"><strong>Code agents</strong> implement in parallel worktrees &harr; <strong>Test agent</strong> validates with holdout (max 3 rounds)</div>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <div class="flow-num">05</div>
+        <div class="flow-content"><strong>Promote</strong> holdout tests into permanent suite &rarr; <strong>cleanup</strong> artifacts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 8: Bug Pipeline ═══════════ -->
+  <div class="slide" data-slide="8">
+    <div class="eyebrow">Bug pipeline</div>
+    <h2>Red-green cycle</h2>
+    <p>Strict discipline that prevents the most common AI failure: fixing the symptom instead of the root cause.</p>
+
+    <div style="margin-top: 1.2rem;">
+      <div class="phase phase--red">
+        <div class="phase-label">Red phase</div>
+        <p>Write a failing test that proves the bug is real. Zero source code changes allowed.</p>
+      </div>
+      <div class="phase phase--green">
+        <div class="phase-label">Green phase</div>
+        <p>Implement the minimal fix. Zero test file changes allowed. All existing tests must still pass.</p>
+      </div>
+    </div>
+
+    <p style="margin-top: 1rem;">Before any fix: <strong>3 investigators</strong> run in parallel (code path tracer, history detective, pattern analyst) producing a synthesized report with systemic analysis and regression risk assessment.</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 9: Deep Code Map ═══════════ -->
+  <div class="slide" data-slide="9">
+    <div class="eyebrow">Onboarding</div>
+    <h2>Deep code map</h2>
+    <p>Built by parallel scanner agents &mdash; one per source directory. Every downstream agent reads relevant sections.</p>
+
+    <ul class="codemap-grid" style="margin-top: 1rem;">
+      <li>
+        <span class="label">Module dependency graph</span>
+        <span class="desc">Which modules import from which, grouped by directory</span>
+      </li>
+      <li>
+        <span class="label">Entry point traces</span>
+        <span class="desc">Route &rarr; controller &rarr; service &rarr; repo &rarr; database</span>
+      </li>
+      <li>
+        <span class="label">Shared dependency hotspots</span>
+        <span class="desc">Modules imported by many others &mdash; high blast radius</span>
+      </li>
+      <li>
+        <span class="label">Interface boundaries</span>
+        <span class="desc">What each module exports as its contract</span>
+      </li>
+      <li>
+        <span class="label">Cross-cutting concerns</span>
+        <span class="desc">Middleware, decorators, base classes affecting multiple modules</span>
+      </li>
+      <li>
+        <span class="label">Circular dependencies</span>
+        <span class="desc">Detected and flagged for resolution</span>
+      </li>
+    </ul>
+
+    <p style="margin-top: 0.8rem;">Output includes a Mermaid diagram (<code>code-map.mermaid</code>) for human visualization.</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 10: Group Orchestration ═══════════ -->
+  <div class="slide" data-slide="10">
+    <div class="eyebrow">Scaling</div>
+    <h2>Group orchestration</h2>
+    <p>Large features decompose into multiple specs with declared dependencies. Dark Factory resolves them into execution waves.</p>
+
+    <table style="margin-top: 1rem;">
+      <thead>
+        <tr><th>Capability</th><th>How it works</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Wave execution</td><td>Foundation specs complete and merge first, then dependents start from updated code</td></tr>
+        <tr><td>Parallel worktrees</td><td>Independent specs run simultaneously in isolated git worktrees</td></tr>
+        <tr><td>Resume semantics</td><td>Re-run after failure &mdash; completed specs are automatically skipped</td></tr>
+        <tr><td>Failure isolation</td><td>Only transitive dependents pause; independent specs continue unaffected</td></tr>
+        <tr><td><code>--group</code></td><td>All specs in a feature group</td></tr>
+        <tr><td><code>--all</code></td><td>Every pending spec across all groups, independent groups in parallel</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 11: Regression Prevention ═══════════ -->
+  <div class="slide" data-slide="11">
+    <div class="eyebrow">Reliability</div>
+    <h2>Regression prevention</h2>
+    <p>Bug fixes include built-in protection against recurrence. Tests that don't explain what they guard are tests that get deleted.</p>
+
+    <ul style="margin-top: 1rem;">
+      <li><strong>Systemic analysis</strong> &mdash; search for the same vulnerable pattern across the entire codebase, not just the reported instance</li>
+      <li><strong>Risk classification</strong> &mdash; isolated, systemic, or shared-code risk with concrete reintroduction vectors</li>
+      <li><strong>Root cause depth</strong> &mdash; distinguish immediate cause from deeper enabling pattern. Tests target the deeper pattern.</li>
+      <li><strong>Variant scenarios</strong> &mdash; proportional to risk: <span class="tag tag--red">high</span> 3&ndash;5 variants, <span class="tag tag--dim">med</span> 1&ndash;2, <span class="tag tag--green">low</span> reproduction only</li>
+      <li><strong>Annotated tests</strong> &mdash; every promoted test carries root cause pattern, guarded code locations, and bug reference</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════ SLIDE 12: Usage ═══════════ -->
+  <div class="slide" data-slide="12">
+    <div class="eyebrow">Usage</div>
+    <h2>It's just a conversation</h2>
+
+    <div class="cmd-block">
+      <div class="prompt"><span>&gt;</span> <em>I need an API endpoint that lets users export their data as CSV</em></div>
+      <div class="response">Auto-detected as feature &rarr; 3 spec leads &rarr; architect review &rarr; implementation</div>
+    </div>
+
+    <div class="cmd-block">
+      <div class="prompt"><span>&gt;</span> <em>Login throws a 500 when email contains a plus sign</em></div>
+      <div class="response">Auto-detected as bug &rarr; 3 investigators &rarr; red-green fix &rarr; regression tests</div>
+    </div>
+
+    <div class="cmd-block">
+      <div class="prompt"><span>&gt;</span> <em>How does the auth system work?</em></div>
+      <div class="prompt" style="margin-top: 0.3rem; color: var(--text-muted); font-style: italic;">&nbsp;&nbsp;... conversation evolves ...</div>
+      <div class="prompt"><span>&gt;</span> <em>OK let's refactor it to use JWT</em></div>
+      <div class="response">Transition detected &rarr; activates Dark Factory with full conversation context</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 13: Quick Start ═══════════ -->
+  <div class="slide" data-slide="13">
+    <div class="eyebrow">Getting started</div>
+    <h2>Two ways to install</h2>
+
+    <div class="install-block">
+      <div class="label">Claude Code Plugin (recommended)</div>
+      <pre>/plugin marketplace add nguyenhuynhkhanh/dark-factory
+/plugin install dark-factory@dark-factory-marketplace</pre>
+    </div>
+
+    <div class="install-block">
+      <div class="label">npm (per-project)</div>
+      <pre>npx dark-factory init</pre>
+    </div>
+
+    <p style="margin-top: 1.2rem;">Then: open Claude Code &rarr; <code>/df-onboard</code> &rarr; describe what you need.</p>
+    <p>Plugin installs once and works across all projects with auto-updates. npm installs into the current project only.</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 14: Design Decisions ═══════════ -->
+  <div class="slide" data-slide="14">
+    <div class="eyebrow">Design decisions</div>
+    <h2>Why it works this way</h2>
+
+    <div class="decision-grid">
+      <div class="decision-item">
+        <strong>Holdout scenarios</strong>
+        <span>Code-agent can't game tests it hasn't seen</span>
+      </div>
+      <div class="decision-item">
+        <strong>3 parallel leads</strong>
+        <span>Single agents have blind spots. Three perspectives catch more.</span>
+      </div>
+      <div class="decision-item">
+        <strong>Git worktree isolation</strong>
+        <span>Parallel specs without merge conflicts</span>
+      </div>
+      <div class="decision-item">
+        <strong>Strict red-green</strong>
+        <span>Prevents changing tests to match broken behavior</span>
+      </div>
+      <div class="decision-item">
+        <strong>Deep code map</strong>
+        <span>Agents know blast radius before making changes</span>
+      </div>
+      <div class="decision-item">
+        <strong>Manifest lifecycle</strong>
+        <span>Track active work only. Git history is the archive.</span>
+      </div>
+      <div class="decision-item">
+        <strong>Smart decomposition</strong>
+        <span>Large features split into dependency-aware waves</span>
+      </div>
+      <div class="decision-item">
+        <strong>Auto-approved permissions</strong>
+        <span>Agents run without interrupting developers</span>
+      </div>
+    </div>
+
+    <p style="margin-top: 1.2rem; color: var(--text-muted);">Open source &middot; MIT &middot; Contributions welcome</p>
+  </div>
+
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="counter" id="counter"></div>
+<button class="fullscreen-btn" id="fsBtn" title="Toggle fullscreen (F)">Fullscreen</button>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  let direction = 'forward';
+
+  function go(n) {
+    if (n < 0 || n >= total) return;
+    direction = n > current ? 'forward' : 'back';
+    const leaving = slides[current];
+    const incoming = slides[n];
+
+    // Remove active from old slide — kill transitions instantly so children reset
+    leaving.classList.remove('active');
+    leaving.style.transition = 'none';
+    leaving.offsetHeight;
+    leaving.style.transition = '';
+
+    // Set incoming entry direction, then activate
+    incoming.classList.remove('active');
+    incoming.style.transition = 'none';
+    incoming.style.transform = direction === 'forward' ? 'translateY(16px)' : 'translateY(-16px)';
+    incoming.offsetHeight;
+    incoming.style.transition = '';
+    incoming.classList.add('active');
+
+    current = n;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+  }
+
+  function next() { go(current + 1); }
+  function prev() { go(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); go(0); }
+    if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
+  });
+
+  // Touch support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+  });
+
+  // Click left/right halves
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.fullscreen-btn')) return;
+    if (e.clientX > window.innerWidth * 0.65) next();
+    else if (e.clientX < window.innerWidth * 0.35) prev();
+  });
+
+  // Fullscreen
+  const fsBtn = document.getElementById('fsBtn');
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  fsBtn.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', () => {
+    fsBtn.textContent = document.fullscreenElement ? 'Exit' : 'Fullscreen';
+  });
+
+  go(0);
+</script>
+
+</body>
+</html>

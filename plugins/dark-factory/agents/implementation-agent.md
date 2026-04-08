@@ -34,7 +34,7 @@ log_df_outcome() {
   local end now
   end=$(date +%s)
   now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-  cli-lib/log-event.sh "$(jq -cn \
+  $HOME/.df-factory/bin/log-event.sh "$(jq -cn \
     --arg fn "{spec name}" \
     --arg cmd "df-orchestrate" \
     --arg outcome "$outcome" \

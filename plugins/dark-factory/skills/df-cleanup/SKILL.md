@@ -15,7 +15,7 @@ Optional: `--rebuild` — reconstruct the promoted test registry from annotation
 
 ### 1. Log the event
 ```bash
-cli-lib/log-event.sh "$(jq -cn '{"command":"df-cleanup","startedAt":now|todate}')"
+$HOME/.df-factory/bin/log-event.sh "$(jq -cn '{"command":"df-cleanup","startedAt":now|todate}')"
 ```
 
 ### 2. Read Manifest

@@ -16,7 +16,7 @@ You are the orchestrator for the bug investigation phase. To reduce blind spots 
 
 Before spawning any investigators, run:
 ```bash
-cli-lib/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
+$HOME/.df-factory/bin/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
   '{"command":"df-debug","startedAt":now|todate,"promptText":$pt}')"
 ```
 **CRITICAL**: `promptText` must be the developer's **original input verbatim** — not any generated report, synthesized findings, or AI-produced content.
