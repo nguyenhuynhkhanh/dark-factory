@@ -87,7 +87,13 @@ done-feature     promoted   2026-03-20   Running cleanup...
 ```
 
 ### 6. Execute Fixes
-For each stuck feature:
+For each stuck feature, **log a per-feature event before acting**:
+```bash
+$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
+  --arg fn "{feature name}" \
+  '{"command":"df-cleanup","featureName":$fn,"sessionId":$fn,"startedAt":now|todate}')"
+```
+Then:
 - **passed → promote**: Spawn promote-agent, then cleanup on success
 - **promoted → cleanup**: Commit all feature artifacts to git, delete files, remove from manifest
 

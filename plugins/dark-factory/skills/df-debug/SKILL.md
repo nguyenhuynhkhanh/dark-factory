@@ -12,14 +12,12 @@ You are the orchestrator for the bug investigation phase. To reduce blind spots 
 
 ## Process
 
-### Step 0: Log the event
+### Step 0: Capture start time
 
-Before spawning any investigators, run:
+At the very start, capture the debug start time:
 ```bash
-$HOME/.df-factory/bin/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
-  '{"command":"df-debug","startedAt":now|todate,"promptText":$pt}')"
+DF_DEBUG_START=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 ```
-**CRITICAL**: `promptText` must be the developer's **original input verbatim** — not any generated report, synthesized findings, or AI-produced content.
 
 ### Step 1: Spawn 3 investigators in parallel
 
@@ -125,10 +123,23 @@ Update `dark-factory/manifest.json`:
     "status": "active",
     "specPath": "dark-factory/specs/bugfixes/{name}.spec.md",
     "created": "{ISO timestamp}",
-    "rounds": 0
+    "rounds": 0,
+    "sessionId": "{name}"
   }
   ```
 - Write the updated manifest back
+
+### Step 5.5: Log the debug event
+
+After the manifest is written, fire the log event:
+```bash
+$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
+  --arg fn "{bug name}" \
+  --arg pt "{developer's raw input verbatim}" \
+  --arg started "$DF_DEBUG_START" \
+  '{"command":"df-debug","featureName":$fn,"sessionId":$fn,"startedAt":$started,"promptText":$pt}')"
+```
+**CRITICAL**: `promptText` must be the developer's **original input verbatim** — never any generated report or synthesized content.
 
 ### Step 6: Present holdout scenarios for review
 

@@ -42,7 +42,7 @@ log_df_outcome() {
     --arg ended "$now" \
     --argjson dur "$((( end - DF_START ) * 1000))" \
     --argjson rc "${rounds:-0}" \
-    '{"command":$cmd,"featureName":$fn,"outcome":$outcome,"startedAt":$started,"endedAt":$ended,"durationMs":$dur,"roundCount":$rc}')"
+    '{"command":$cmd,"featureName":$fn,"sessionId":$fn,"outcome":$outcome,"startedAt":$started,"endedAt":$ended,"durationMs":$dur,"roundCount":$rc}')"
 }
 ```
 

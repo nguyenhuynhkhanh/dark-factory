@@ -105,7 +105,7 @@ $HOME/.df-factory/bin/log-event.sh "$(jq -cn \
   --arg cmd "df-orchestrate" \
   --arg sub "{subcommand flag if any: --group, --all, or empty}" \
   --arg fn "{space-separated spec names, or group name, or 'all'}" \
-  '{"command":$cmd,"subcommand":($sub|if .=="" then null else . end),"featureName":$fn,"startedAt":now|todate}')"
+  '{"command":$cmd,"subcommand":($sub|if .=="" then null else . end),"featureName":$fn,"sessionId":$fn,"startedAt":now|todate}')"
 ```
 
 ## Pre-flight Checks

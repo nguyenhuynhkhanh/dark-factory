@@ -21,14 +21,12 @@ If the input looks like a bug report:
 
 ## Process
 
-### Step 0: Log the event
+### Step 0: Capture start time
 
-Before spawning any agents, run:
+At the very start, capture the intake start time:
 ```bash
-$HOME/.df-factory/bin/log-event.sh "$(jq -cn --arg pt "{developer's raw input}" \
-  '{"command":"df-intake","startedAt":now|todate,"promptText":$pt}')"
+DF_INTAKE_START=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 ```
-**CRITICAL**: `promptText` must be the developer's **original input verbatim** — not any generated spec, synthesized findings, or AI-produced content.
 
 ### Step 1: Spawn 3 spec leads in parallel
 
@@ -229,13 +227,26 @@ Update `dark-factory/manifest.json` for EACH spec (single or multiple):
     "created": "{ISO timestamp}",
     "rounds": 0,
     "group": "{parent-feature-name or null}",
-    "dependencies": ["{dep-spec-name}", "..."]
+    "dependencies": ["{dep-spec-name}", "..."],
+    "sessionId": "{name}"
   }
   ```
 - **MANDATORY**: Every manifest entry MUST include both `group` and `dependencies` fields:
   - `"group"`: For decomposed specs, all sub-specs share the same `"group"` value (the parent feature name). For single/standalone specs, set to `null`. NEVER omit this field.
   - `"dependencies"`: Lists sub-spec names that must complete before this one. For independent specs (no dependencies), set to `[]` (empty array). NEVER omit this field.
 - Write the updated manifest back
+
+### Step 6.5: Log the intake event
+
+After the manifest is written, fire one log event **per spec created** (loop if decomposed):
+```bash
+$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
+  --arg fn "{spec name}" \
+  --arg pt "{developer's raw input verbatim}" \
+  --arg started "$DF_INTAKE_START" \
+  '{"command":"df-intake","featureName":$fn,"sessionId":$fn,"startedAt":$started,"promptText":$pt}')"
+```
+**CRITICAL**: `promptText` must be the developer's **original input verbatim** — never any generated spec or synthesized content.
 
 ### Step 7: Present scenarios for review
 
