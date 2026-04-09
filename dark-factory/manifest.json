@@ -1,17 +1,5 @@
 {
   "features": {
-    "readme-install-update": {
-      "type": "feature",
-      "status": "promoted",
-      "specPath": "dark-factory/specs/features/readme-install-update.spec.md",
-      "created": "2026-04-09T00:00:00.000Z",
-      "rounds": 1,
-      "group": "install-update",
-      "dependencies": [],
-      "passedAt": "2026-04-09T00:00:00.000Z",
-      "promotedTestPath": "cli-lib/tests/readme-install-update.test.bats",
-      "promotedAt": "2026-04-09T00:00:00.000Z"
-    },
     "remove-jq": {
       "type": "feature",
       "status": "active",
