@@ -1,0 +1,22 @@
+{
+  "feature": "readme-install-update",
+  "status": "passed",
+  "testedAt": "2026-04-09T00:00:00.000Z",
+  "rounds": 1,
+  "testFile": "cli-lib/tests/readme-install-update.test.bats",
+  "scenarios": {
+    "H-01": { "status": "passed", "description": "Unknown shell falls back to ~/.bashrc with warning" },
+    "H-02": { "status": "passed", "description": "Non-standard zsh path detected as zsh via substring match" },
+    "H-03": { "status": "passed", "description": "Idempotency uses exact literal match, not fuzzy df-factory match" },
+    "H-04": { "status": "passed", "description": "curl-pipe-bash uses $SHELL env var for detection, not running process" },
+    "H-05": { "status": "passed", "description": "PATH line uses $HOME not literal tilde" },
+    "H-06": { "status": "passed", "description": "Profile file does not exist; install creates it" },
+    "H-07": { "status": "passed", "description": "Tilde-form coexists; $HOME-form still appended" },
+    "H-08": { "status": "passed", "description": "Appending while file open does not lose content" },
+    "H-09": { "status": "passed", "description": "Script uses $HOME so it works for any home directory" },
+    "H-10": { "status": "passed", "description": "Running script directly is identical to piping" }
+  },
+  "totalTests": 10,
+  "passed": 10,
+  "failed": 0
+}

@@ -1,3 +1,23 @@
 {
-  "features": {}
+  "features": {
+    "readme-install-update": {
+      "type": "feature",
+      "status": "passed",
+      "specPath": "dark-factory/specs/features/readme-install-update.spec.md",
+      "created": "2026-04-09T00:00:00.000Z",
+      "rounds": 1,
+      "group": "install-update",
+      "dependencies": [],
+      "passedAt": "2026-04-09T00:00:00.000Z"
+    },
+    "remove-jq": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/remove-jq.spec.md",
+      "created": "2026-04-09T00:00:00.000Z",
+      "rounds": 0,
+      "group": "install-update",
+      "dependencies": []
+    }
+  }
 }

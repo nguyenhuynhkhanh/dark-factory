@@ -17,5 +17,30 @@ for script in $SCRIPTS; do
   chmod +x "$INSTALL_DIR/$script"
 done
 
+# Detect shell profile
+PROFILE_LINE='export PATH="$HOME/.df-factory/bin:$PATH"'
+
+if echo "$SHELL" | grep -q "zsh"; then
+  PROFILE_FILE="$HOME/.zshrc"
+elif echo "$SHELL" | grep -q "bash"; then
+  PROFILE_FILE="$HOME/.bashrc"
+else
+  PROFILE_FILE="$HOME/.bashrc"
+  echo "Warning: unrecognised shell ($SHELL). Falling back to ~/.bashrc for PATH configuration."
+fi
+
+if grep -qF "$PROFILE_LINE" "$PROFILE_FILE" 2>/dev/null; then
+  echo "PATH already configured in $PROFILE_FILE — skipping."
+else
+  printf '\n%s\n' "$PROFILE_LINE" >> "$PROFILE_FILE"
+  echo "Added PATH entry to $PROFILE_FILE."
+fi
+
 echo ""
-echo "Done. Run '~/.df-factory/bin/df-onboard.sh' to get started."
+echo "Done."
+echo ""
+echo "To start using the CLI, run:"
+echo "  source $PROFILE_FILE"
+echo ""
+echo "Or open a new terminal. After that, run 'df-onboard.sh' to get started."
+echo "(You can also run the full path now: ~/.df-factory/bin/df-onboard.sh)"
