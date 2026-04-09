@@ -2,13 +2,15 @@
   "features": {
     "remove-jq": {
       "type": "feature",
-      "status": "passed",
+      "status": "promoted",
       "specPath": "dark-factory/specs/features/remove-jq.spec.md",
       "created": "2026-04-09T00:00:00.000Z",
       "rounds": 1,
       "group": "install-update",
       "dependencies": [],
-      "passedAt": "2026-04-09T08:40:00.000Z"
+      "passedAt": "2026-04-09T08:40:00.000Z",
+      "promotedTestPath": "dark-factory/results/remove-jq/results.json",
+      "promotedAt": "2026-04-09T08:42:00.000Z"
     }
   }
 }
