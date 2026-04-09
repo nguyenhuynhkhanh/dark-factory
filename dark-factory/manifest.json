@@ -9,6 +9,15 @@
       "rounds": 0,
       "group": null,
       "dependencies": []
+    },
+    "adaptive-lead-count": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/adaptive-lead-count.spec.md",
+      "created": "2026-04-09T00:00:00Z",
+      "rounds": 0,
+      "group": null,
+      "dependencies": []
     }
   }
 }
