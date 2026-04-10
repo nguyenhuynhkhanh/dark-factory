@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "promotedTests": [
+    {
+      "feature": "adaptive-lead-count",
+      "type": "feature",
+      "files": [
+        {
+          "path": "tests/dark-factory-setup.test.js",
+          "colocated": true,
+          "startMarker": "// DF-PROMOTED-START: adaptive-lead-count",
+          "endMarker": "// DF-PROMOTED-END: adaptive-lead-count"
+        }
+      ],
+      "promotedAt": "2026-04-09T12:00:00Z",
+      "holdoutScenarioCount": 3,
+      "annotationFormat": "header-comment",
+      "sectionMarkers": true
+    },
+    {
+      "feature": "token-measurement",
+      "type": "feature",
+      "files": [
+        {
+          "path": "tests/dark-factory-setup.test.js",
+          "colocated": true,
+          "startMarker": "// DF-PROMOTED-START: token-measurement",
+          "endMarker": "// DF-PROMOTED-END: token-measurement"
+        }
+      ],
+      "promotedAt": "2026-04-09T00:00:00Z",
+      "holdoutScenarioCount": 3,
+      "annotationFormat": "header-comment",
+      "sectionMarkers": true
+    }
+  ]
+}

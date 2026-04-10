@@ -16,25 +16,51 @@ You receive from the orchestrator:
 - **Mode**: "feature" or "bugfix"
 - **Branch name**: current working branch
 - **Skip-tests flag**: whether `--skip-tests` was passed (optional)
+- **Tag**: optional `--tag <name>` value for baseline recording
 
-## Timing
+## Timing and Token Tracking
 
-At the very start, capture the start epoch for duration tracking:
+At the very start, capture the start epoch and initialize token counters:
 ```bash
 DF_START=$(date +%s)
+SPEC_HASH=$(shasum -a 256 "$SPEC_PATH" 2>/dev/null | cut -c1-7 || sha256sum "$SPEC_PATH" 2>/dev/null | cut -c1-7 || echo "unknown")
+TOK_ARCHITECT=0; TOK_CODE=0; TOK_TEST=0; TOK_PROMOTE=0
 ```
 
-Use this helper at every terminal exit point to log the outcome:
+After each sub-agent call, extract and accumulate tokens from the result string:
 ```bash
-# Usage: log_df_outcome <outcome> <round_count>
+# Call after each sub-agent invocation, passing its result string and phase
+accumulate_tokens() {
+  local result="$1" phase="$2"
+  local sum=0
+  while IFS= read -r match; do
+    sum=$((sum + match))
+  done < <(echo "$result" | grep -oP 'total_tokens: \K[0-9]+')
+  case "$phase" in
+    architect) TOK_ARCHITECT=$((TOK_ARCHITECT + sum)) ;;
+    code)      TOK_CODE=$((TOK_CODE + sum)) ;;
+    test)      TOK_TEST=$((TOK_TEST + sum)) ;;
+    promote)   TOK_PROMOTE=$((TOK_PROMOTE + sum)) ;;
+  esac
+  [ "$sum" -eq 0 ] && echo "Warning: No usage block found for $phase agent — token count may be incomplete"
+}
+```
+
+Use this helper at every terminal exit point to log the outcome and emit the token display:
+```bash
+# Usage: log_df_outcome <outcome> <round_count> [partial]
 # outcome: success | failed | blocked | abandoned
+# partial: true|false (default false)
 log_df_outcome() {
-  local outcome="$1"
-  local rounds="$2"
-  local end now
+  local outcome="$1" rounds="$2" partial="${3:-false}"
+  local end now total group_total
   end=$(date +%s)
   now=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-  $HOME/.df-factory/bin/log-event.sh "$(jq -cn \
+  total=$((TOK_ARCHITECT + TOK_CODE + TOK_TEST + TOK_PROMOTE))
+
+  # Build event payload with token fields
+  local payload
+  payload=$(jq -cn \
     --arg fn "{spec name}" \
     --arg cmd "df-orchestrate" \
     --arg outcome "$outcome" \
@@ -42,7 +68,80 @@ log_df_outcome() {
     --arg ended "$now" \
     --argjson dur "$((( end - DF_START ) * 1000))" \
     --argjson rc "${rounds:-0}" \
-    '{"command":$cmd,"featureName":$fn,"sessionId":$fn,"outcome":$outcome,"startedAt":$started,"endedAt":$ended,"durationMs":$dur,"roundCount":$rc}')"
+    --argjson total "$total" \
+    --argjson arch "$TOK_ARCHITECT" \
+    --argjson code "$TOK_CODE" \
+    --argjson test "$TOK_TEST" \
+    --argjson prom "$TOK_PROMOTE" \
+    --arg hash "$SPEC_HASH" \
+    --argjson part "$partial" \
+    '{"command":$cmd,"featureName":$fn,"sessionId":$fn,"outcome":$outcome,"startedAt":$started,"endedAt":$ended,"durationMs":$dur,"roundCount":$rc,"totalTokens":$total,"agentTokens":{"architect":$arch,"code":$code,"test":$test,"promote":$prom},"specHash":$hash,"partial":$part}')
+  # Add baselineTag if --tag was set and run succeeded
+  if [ -n "${DF_TAG:-}" ] && [ "$partial" = "false" ] && [ "$outcome" = "success" ]; then
+    payload=$(echo "$payload" | jq --arg tag "$DF_TAG" '. + {"baselineTag": $tag}')
+  fi
+  $HOME/.df-factory/bin/log-event.sh "$payload"
+
+  # Write to local token-history.jsonl (independent of server)
+  local hist_file="$HOME/.df-factory/token-history.jsonl"
+  mkdir -p "$(dirname "$hist_file")"
+  local hist_entry
+  hist_entry=$(jq -cn \
+    --arg fn "{spec name}" \
+    --argjson grp "null" \
+    --arg hash "$SPEC_HASH" \
+    --argjson total "$total" \
+    --argjson arch "$TOK_ARCHITECT" \
+    --argjson code "$TOK_CODE" \
+    --argjson test "$TOK_TEST" \
+    --argjson prom "$TOK_PROMOTE" \
+    --argjson part "$partial" \
+    --arg completed "$now" \
+    '{"featureName":$fn,"group":$grp,"specHash":$hash,"totalTokens":$total,"agentTokens":{"architect":$arch,"code":$code,"test":$test,"promote":$prom},"partial":$part,"tag":null,"completedAt":$completed}')
+  # Set tag only on successful completion with --tag
+  if [ -n "${DF_TAG:-}" ] && [ "$partial" = "false" ] && [ "$outcome" = "success" ]; then
+    hist_entry=$(echo "$hist_entry" | jq --arg tag "$DF_TAG" '.tag = $tag')
+  fi
+  echo "$hist_entry" >> "$hist_file" 2>/dev/null || echo "Warning: Could not write token-history.jsonl"
+
+  # Emit token display block (last output before exit)
+  emit_token_display "$total" "$partial"
+}
+
+emit_token_display() {
+  local total="$1" partial="$2"
+  local hist_file="$HOME/.df-factory/token-history.jsonl"
+  printf '\n=== Token Usage ===\n'
+  printf '  architect: %s\n' "$(printf '%d' "$TOK_ARCHITECT" | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')"
+  printf '  code:      %s\n' "$(printf '%d' "$TOK_CODE" | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')"
+  printf '  test:      %s\n' "$(printf '%d' "$TOK_TEST" | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')"
+  printf '  promote:   %s\n' "$(printf '%d' "$TOK_PROMOTE" | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')"
+  printf '  ─────────────────\n'
+  printf '  total:     %s\n\n' "$(printf '%d' "$total" | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')"
+  # Find most recent tagged baseline for this spec
+  local baseline tag_val baseline_total baseline_date baseline_hash
+  baseline=$(grep '"featureName":"{spec name}"' "$hist_file" 2>/dev/null | grep '"tag":' | grep -v '"tag":null' | tail -1)
+  if [ -n "$baseline" ]; then
+    tag_val=$(echo "$baseline" | jq -r '.tag')
+    baseline_total=$(echo "$baseline" | jq -r '.totalTokens')
+    baseline_date=$(echo "$baseline" | jq -r '.completedAt' | cut -c1-10)
+    baseline_hash=$(echo "$baseline" | jq -r '.specHash')
+    local delta pct
+    delta=$((total - baseline_total))
+    pct=$(( delta * 100 / baseline_total ))
+    local sign="+"; [ "$delta" -lt 0 ] && sign=""
+    printf '  vs. %s (%s): %s%d%% (%s%d tokens)\n' "$tag_val" "$baseline_date" "$sign" "$pct" "$sign" "$delta"
+    if [ "$baseline_hash" = "$SPEC_HASH" ]; then
+      printf '  spec hash: %s [unchanged]\n' "$SPEC_HASH"
+    else
+      printf '  spec hash: %s [WARNING: spec changed since baseline — comparison may be invalid]\n' "$SPEC_HASH"
+    fi
+  else
+    printf '  No baseline — run with `--tag <name>` to record one.\n'
+  fi
+  [ "$partial" = "true" ] && printf '  Token data partial — run blocked/aborted before completion.\n'
+  [ -n "${DF_TAG:-}" ] && [ "$partial" = "true" ] && printf '  Run did not complete — tag not written.\n'
+  printf '  Note: orchestrator'"'"'s own tokens are not included in this count.\n'
 }
 ```
 
@@ -55,7 +154,7 @@ Before architect review, run the project's test suite if not already run at the 
 3. If `--skip-tests`: log "Pre-flight test gate skipped by --skip-tests flag." Record `"testGateSkipped": true` and timestamp in manifest. Proceed.
 4. Run the test suite. If failures: report ALL failures and STOP. Do NOT proceed to architect review.
    ```bash
-   log_df_outcome failed 0
+   log_df_outcome failed 0 true
    ```
 
 ## Smart Re-run Detection
@@ -82,7 +181,8 @@ Check if `dark-factory/results/{name}/` has previous results:
   2. **Architecture & Performance**
   3. **API Design & Backward Compatibility**
 - Each receives: spec file path, feature name, feature/bugfix mode, assigned domain parameter.
-- Wait for all three. Synthesize into unified review:
+- Wait for all three. Accumulate architect tokens: `accumulate_tokens "$result" architect`
+- Synthesize into unified review:
   - **Strictest-wins**: any BLOCKED = overall BLOCKED; otherwise any APPROVED WITH NOTES = overall APPROVED WITH NOTES; otherwise APPROVED.
   - **Contradiction detection**: contradictory recommendations across domains = escalate to developer via AskUserQuestion.
   - **Deduplicate overlapping findings**: merge semantically similar findings, attribute all source domains, use highest severity.
@@ -91,7 +191,7 @@ Check if `dark-factory/results/{name}/` has previous results:
 - If any domain BLOCKED: collect all blockers, spawn spec-agent (features) or debug-agent (bugs) with all findings to update spec. Re-spawn only blocked/concerned domains. Max 3 total passes.
 - If overall BLOCKED after all passes: report to developer, do NOT proceed.
   ```bash
-  log_df_outcome blocked 0
+  log_df_outcome blocked 0 true
   ```
 - If APPROVED or APPROVED WITH NOTES: proceed to Step 0d.
 
@@ -124,11 +224,14 @@ Rules: zero file overlap between tracks, sequential if dependencies exist, max 4
 - If fix mode: include sanitized failure summary from previous round.
 
 **Single track:** Spawn ONE code-agent with full spec and public scenarios in feature mode.
+After code-agent returns: `accumulate_tokens "$result" code`
 
 **Multiple tracks:** Spawn code-agents in parallel with `isolation: "worktree"`, each with: full spec, all public scenarios, explicit track assignment, explicit file boundaries. Merge worktree branches back sequentially; report merge conflicts to developer.
+After each code-agent returns: `accumulate_tokens "$result" code`
 
 **Step 2: Test Agent**
 - Spawn test-agent with: the feature name (test-agent reads holdout scenarios itself), the spec file path.
+- After test-agent returns: `accumulate_tokens "$result" test`
 - Read results from `dark-factory/results/{name}/`.
 
 **Step 3: Evaluate**
@@ -136,7 +239,7 @@ Rules: zero file overlap between tracks, sequential if dependencies exist, max 4
 - Failures and rounds < 3: extract behavioral failure descriptions (NO holdout content), re-spawn only failing tracks.
 - Failures and rounds = 3: report to developer.
   ```bash
-  log_df_outcome failed 3
+  log_df_outcome failed 3 true
   ```
 
 ## Bugfix Mode — Red-Green Cycle
@@ -144,20 +247,23 @@ Rules: zero file overlap between tracks, sequential if dependencies exist, max 4
 ### Step 1: Red Phase (Prove the Bug)
 - Read debug report and all public scenario files.
 - Spawn code-agent with: debug report, public scenarios, instruction: **bugfix mode, Step 1 only — write failing test, NO source code changes**.
+- After code-agent returns: `accumulate_tokens "$result" code`
 - Verify: code-agent ONLY created/modified test files, test FAILS. If test passes: report to developer, STOP.
 
 ### Step 2: Green Phase (Fix the Bug)
 - Spawn code-agent with: debug report, public scenarios, test file path from Step 1, instruction: **bugfix mode, Step 2 only — implement fix, NO test file changes**.
+- After code-agent returns: `accumulate_tokens "$result" code`
 - Verify: ONLY source files modified, failing test now PASSES, ALL existing tests still pass.
 - If test still fails or existing tests break: retry (max 3 rounds).
 
 ### Step 3: Holdout Validation
 - Spawn test-agent with: feature name, debug report path.
+- After test-agent returns: `accumulate_tokens "$result" test`
 - If all passed: proceed to Post-Implementation Lifecycle.
 - If failures and rounds < 3: extract behavioral descriptions, go back to Step 2.
 - If failures and rounds = 3: report to developer.
   ```bash
-  log_df_outcome failed 3
+  log_df_outcome failed 3 true
   ```
 
 ## Post-Implementation File Count Check
@@ -176,6 +282,7 @@ After implementation (before holdout validation):
 **Step 4: Promote**
 - Update manifest: set status to `"passed"`, record timestamp.
 - Spawn promote-agent with: feature name, holdout test file path from `dark-factory/results/{name}/`.
+- After promote-agent returns: `accumulate_tokens "$result" promote`
 - If promoted tests pass: update manifest to `"promoted"`, record `"promotedTestPath"` and timestamp.
 - If promoted tests fail: keep status `"passed"`, report failure, STOP.
 
@@ -186,7 +293,7 @@ After implementation (before holdout validation):
 - Commit deletion: `git add -A dark-factory/ && git commit -m "Cleanup {name}: artifacts deleted, tests promoted"`
 - Log success:
   ```bash
-  log_df_outcome success {actual round count}
+  log_df_outcome success {actual round count} false
   ```
 
 ## Information Barrier Rules

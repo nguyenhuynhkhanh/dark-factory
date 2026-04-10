@@ -2352,3 +2352,263 @@ describe("Plugin mirror for implementation-agent", () => {
     assert.equal(source, plugin, "Plugin implementation-agent.md should match source");
   });
 });
+
+// ===========================================================================
+// Promoted from Dark Factory holdout: adaptive-lead-count
+// Root cause: df-intake unconditionally spawned 3 leads regardless of feature scope; this feature adds adaptive selection
+// Guards: .claude/skills/df-intake/SKILL.md, plugins/dark-factory/skills/df-intake/SKILL.md, .claude/rules/dark-factory.md, CLAUDE.md
+// DF-PROMOTED-START: adaptive-lead-count
+// ===========================================================================
+
+describe("Adaptive lead count — scope evaluation and frontmatter", () => {
+  it("df-intake frontmatter description says '1 or 3 spec-agents based on scope'", () => {
+    const content = readSkill("df-intake");
+    const fm = parseFrontmatter(content);
+    assert.ok(
+      fm.description.includes("1 or 3 spec-agents based on scope") ||
+        fm.description.includes("1 or 3"),
+      "df-intake frontmatter description should reflect adaptive lead count (1 or 3)"
+    );
+  });
+
+  it("df-intake SKILL.md contains scope evaluation block section", () => {
+    const content = readSkill("df-intake");
+    assert.ok(
+      content.includes("Scope Evaluation") || content.includes("scope evaluation"),
+      "df-intake should contain a scope evaluation section (Step 0)"
+    );
+    assert.ok(
+      content.includes("Files implied") &&
+        content.includes("Concern type") &&
+        content.includes("Cross-cutting keywords") &&
+        content.includes("Ambiguity markers") &&
+        content.includes("blast radius"),
+      "df-intake scope evaluation block should contain all five criteria fields"
+    );
+  });
+
+  it("df-intake SKILL.md documents --leads flag in Trigger section", () => {
+    const content = readSkill("df-intake");
+    assert.ok(
+      content.includes("--leads=1") && content.includes("--leads=3"),
+      "df-intake Trigger section should document --leads=1 and --leads=3 flag variants"
+    );
+  });
+
+  it("df-intake 1-lead prompt contains all three original lead perspective sections", () => {
+    const content = readSkill("df-intake");
+    // The full-spectrum 1-lead prompt must contain all Lead A + B + C section headers
+    assert.ok(
+      content.includes("Users & Use Cases") &&
+        content.includes("Architecture Approach") &&
+        content.includes("Failure Modes"),
+      "df-intake 1-lead prompt should include sections from all three lead perspectives (user, architecture, reliability)"
+    );
+  });
+
+  it("df-intake 1-lead path collapses Step 2 synthesis", () => {
+    const content = readSkill("df-intake");
+    assert.ok(
+      content.includes("Skip synthesis") ||
+        (content.includes("1 lead was used") && content.includes("directly")),
+      "df-intake should collapse synthesis step for 1-lead path"
+    );
+  });
+
+  it("df-intake 1-lead Step 3 phrasing avoids multi-lead language", () => {
+    const content = readSkill("df-intake");
+    assert.ok(
+      content.includes("Do NOT say") &&
+        (content.includes("Lead A found") || content.includes("all leads agreed")),
+      "df-intake should explicitly forbid multi-lead phrasing in 1-lead Step 3"
+    );
+  });
+
+  it("CLAUDE.md says '1 or 3 spec-agents based on scope' for df-intake", () => {
+    const claudeMd = fs.readFileSync(path.join(ROOT, "CLAUDE.md"), "utf8");
+    assert.ok(
+      claudeMd.includes("1 or 3 spec-agents based on scope") ||
+        claudeMd.includes("1 or 3"),
+      "CLAUDE.md df-intake description should say '1 or 3 spec-agents based on scope'"
+    );
+  });
+
+  it("dark-factory.md says '1 or 3 spec-agents based on scope' for df-intake", () => {
+    const rules = fs.readFileSync(
+      path.join(ROOT, ".claude", "rules", "dark-factory.md"),
+      "utf8"
+    );
+    assert.ok(
+      rules.includes("1 or 3 spec-agents based on scope") ||
+        rules.includes("Spawns 1 or 3 spec-agents"),
+      "dark-factory.md df-intake description should say '1 or 3 spec-agents based on scope'"
+    );
+  });
+
+  it("df-intake plugin mirror is byte-for-byte identical to source after adaptive lead count changes", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, ".claude", "skills", "df-intake", "SKILL.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "skills", "df-intake", "SKILL.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin df-intake SKILL.md must be identical to source after adaptive lead count feature");
+  });
+});
+// DF-PROMOTED-END: adaptive-lead-count
+
+// ===========================================================================
+// Promoted from Dark Factory holdout: token-measurement
+// Root cause: token measurement logic not present in implementation-agent — agents run without tracking token spend per phase, no baseline comparison
+// Guards: .claude/agents/implementation-agent.md, plugins/dark-factory/agents/implementation-agent.md, .claude/skills/df-orchestrate/SKILL.md
+// ===========================================================================
+// DF-PROMOTED-START: token-measurement
+describe("Token measurement — implementation-agent token tracking", () => {
+  it("P-01: implementation-agent contains token accumulation variables", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("TOK_ARCHITECT") &&
+        content.includes("TOK_CODE") &&
+        content.includes("TOK_TEST") &&
+        content.includes("TOK_PROMOTE"),
+      "implementation-agent must declare token accumulation variables for all 4 phases"
+    );
+  });
+
+  it("P-01: implementation-agent extracts tokens using total_tokens regex", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("total_tokens"),
+      "implementation-agent must extract token counts using total_tokens pattern"
+    );
+  });
+
+  it("P-01: implementation-agent computes specHash using SHA-256", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("SPEC_HASH") &&
+        (content.includes("shasum") || content.includes("sha256sum")),
+      "implementation-agent must compute SPEC_HASH using shasum/sha256sum"
+    );
+  });
+
+  it("P-01: implementation-agent emits === Token Usage === display block", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("=== Token Usage ==="),
+      "implementation-agent must emit the === Token Usage === display block"
+    );
+  });
+
+  it("P-01: log_df_outcome includes totalTokens and agentTokens fields", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("totalTokens") && content.includes("agentTokens"),
+      "log_df_outcome helper must include totalTokens and agentTokens in event payload"
+    );
+  });
+
+  it("P-01: log_df_outcome uses --argjson for numeric token fields", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("--argjson total") || content.includes("--argjson dur") || content.includes("--argjson rc"),
+      "implementation-agent must use --argjson for numeric fields (not --arg)"
+    );
+  });
+
+  it("P-01: implementation-agent writes to token-history.jsonl", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("token-history.jsonl"),
+      "implementation-agent must write to ~/.df-factory/token-history.jsonl"
+    );
+  });
+
+  it("P-01: implementation-agent records partial field in token history", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("partial"),
+      "implementation-agent must record partial field in token-history.jsonl"
+    );
+  });
+
+  it("P-02: implementation-agent shows no-baseline message when no tagged entry exists", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("No baseline") && content.includes("--tag"),
+      "implementation-agent must show 'No baseline' message with --tag hint when no baseline exists"
+    );
+  });
+
+  it("P-03: token-history.jsonl write is independent of server (local fallback)", () => {
+    const content = readAgent("implementation-agent");
+    // The write to token-history.jsonl must happen regardless of log-event.sh
+    // Key signal: the file write appears after the server call, not conditional on its success
+    assert.ok(
+      content.includes("token-history.jsonl") && content.includes("log-event.sh"),
+      "implementation-agent must write token-history.jsonl independently of server log-event.sh"
+    );
+  });
+
+  it("P-01: token display block includes 'Note: orchestrator's own tokens are not included'", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("orchestrator") && content.includes("not included in this count"),
+      "implementation-agent token display must include the known-undercount note"
+    );
+  });
+});
+
+describe("Token measurement — df-orchestrate --tag flag", () => {
+  it("df-orchestrate documents --tag flag in trigger section", () => {
+    const content = readSkill("df-orchestrate");
+    assert.ok(
+      content.includes("--tag"),
+      "df-orchestrate should document --tag flag"
+    );
+  });
+
+  it("df-orchestrate parses --tag in argument parsing section", () => {
+    const content = readSkill("df-orchestrate");
+    assert.ok(
+      content.includes("--tag") && content.includes("DF_TAG"),
+      "df-orchestrate should parse --tag and forward it as DF_TAG to implementation-agent"
+    );
+  });
+
+  it("implementation-agent receives DF_TAG from orchestrator", () => {
+    const content = readAgent("implementation-agent");
+    assert.ok(
+      content.includes("DF_TAG"),
+      "implementation-agent must reference DF_TAG for baseline recording"
+    );
+  });
+
+  it("df-orchestrate plugin mirror includes --tag flag", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, ".claude", "skills", "df-orchestrate", "SKILL.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "skills", "df-orchestrate", "SKILL.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin df-orchestrate SKILL.md must match source (token-measurement regression guard)");
+  });
+
+  it("implementation-agent plugin mirror is identical to source after token-measurement", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, ".claude", "agents", "implementation-agent.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "agents", "implementation-agent.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin implementation-agent.md must be identical to source after token-measurement feature");
+  });
+});
+// DF-PROMOTED-END: token-measurement
+

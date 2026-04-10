@@ -12,10 +12,13 @@
     },
     "adaptive-lead-count": {
       "type": "feature",
-      "status": "active",
+      "status": "promoted",
       "specPath": "dark-factory/specs/features/adaptive-lead-count.spec.md",
       "created": "2026-04-09T00:00:00Z",
-      "rounds": 0,
+      "passedAt": "2026-04-09T12:00:00Z",
+      "promotedAt": "2026-04-09T12:00:00Z",
+      "promotedTestPath": "tests/dark-factory-setup.test.js",
+      "rounds": 1,
       "group": null,
       "dependencies": []
     },
@@ -30,12 +33,15 @@
     },
     "token-measurement": {
       "type": "feature",
-      "status": "active",
+      "status": "promoted",
       "specPath": "dark-factory/specs/features/token-measurement.spec.md",
       "created": "2026-04-10T00:00:00Z",
-      "rounds": 0,
+      "rounds": 1,
       "group": null,
-      "dependencies": []
+      "dependencies": [],
+      "passedAt": "2026-04-09T00:00:00Z",
+      "promotedAt": "2026-04-09T00:00:00Z",
+      "promotedTestPath": "tests/dark-factory-setup.test.js"
     }
   }
 }

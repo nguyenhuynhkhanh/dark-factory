@@ -14,10 +14,11 @@ You are the orchestrator for the implementation phase. You are a thin coordinato
 `/df-orchestrate --all` — every active spec in the manifest
 Optional: `--force` — override cross-group guard in explicit mode
 Optional: `--skip-tests` — bypass the pre-flight test gate (logged in manifest)
+Optional: `--tag <name>` — record this run as a named token baseline on successful completion; forwarded to implementation-agent as `DF_TAG`
 
 ### Argument Parsing
 
-1. **Parse flags first**: Extract `--group`, `--all`, `--force`, and `--skip-tests` from the arguments. Everything else is an explicit spec name.
+1. **Parse flags first**: Extract `--group`, `--all`, `--force`, `--skip-tests`, and `--tag <name>` from the arguments. Everything else is an explicit spec name.
 2. **Mutual exclusivity checks** (fail fast with clear errors):
    - `--group` and `--all` together → Error: "Cannot use --group and --all together. Use --group to orchestrate a specific group, or --all to run everything."
    - `--group` or `--all` with explicit spec names → Error: "Cannot combine --group/--all with explicit spec names. Use one mode at a time."
@@ -97,16 +98,17 @@ Build a directed acyclic graph from the `dependencies` fields:
 - Missing `group` field → treat as `null` (standalone)
 - Missing `dependencies` field → treat as `[]` (no dependencies)
 
-## Step 0: Log the event
+## Pre-Phase: Code Map Refresh
 
-Before running pre-flight checks, run:
-```bash
-$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
-  --arg cmd "df-orchestrate" \
-  --arg sub "{subcommand flag if any: --group, --all, or empty}" \
-  --arg fn "{space-separated spec names, or group name, or 'all'}" \
-  '{"command":$cmd,"subcommand":($sub|if .=="" then null else . end),"featureName":$fn,"sessionId":$fn,"startedAt":now|todate}')"
-```
+Before pre-flight checks, ensure the code map is current:
+
+1. Attempt to read `dark-factory/code-map.md` header. If the file does not exist, go to step 4.
+2. Extract the `Git hash:` line value (trim whitespace). Validate it matches `/^[0-9a-f]{40}$/`. Run `git rev-parse HEAD`. If `git rev-parse HEAD` fails, log "Code map refresh skipped: git error" and proceed.
+3. **Hash matches exactly**: proceed to Pre-flight Checks. No codemap-agent invocation. Total overhead: 2 operations.
+4. **Hash differs, invalid hash, or no map**: compute changed files via `git diff --name-only {stored_hash} HEAD` (or empty list if no stored hash). Invoke codemap-agent with `mode: "refresh"` (or `"full"` if no map exists), `stored_hash`, and `changed_files`.
+5. **Greenfield repo** (no source files detected): proceed without a map.
+6. After codemap-agent completes: log a non-blocking suggestion: "Code map auto-generated. For a complete, reviewed map run `/df-onboard`."
+7. Proceed to Pre-flight Checks.
 
 ## Pre-flight Checks
 
