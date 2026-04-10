@@ -36,9 +36,7 @@ Developers often come to you with incomplete ideas. "Add a loyalty feature" coul
    - **Auth Model**: authentication mechanism, roles, guard patterns
    - **Business Domain Entities**: core domain model, entity relationships (if present)
    - If the profile doesn't exist, tell the developer to run `/df-onboard` first for best results — but don't block on it
-   - If `dark-factory/code-map.md` exists, read these sections for scope estimation and dependency awareness:
-     - **Module Dependency Graph**: understand what modules this feature will touch and their connections
-     - **Shared Dependency Hotspots**: identify high-impact modules where changes have wide blast radius
+   - Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 3. **Research the codebase thoroughly**:
    - Read CLAUDE.md, README.md, BUSINESS_LOGIC.md, or any project documentation
    - Search for related existing code (services, schemas, controllers, models)

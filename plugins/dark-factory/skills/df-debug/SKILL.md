@@ -12,12 +12,17 @@ You are the orchestrator for the bug investigation phase. To reduce blind spots 
 
 ## Process
 
-### Step 0: Capture start time
+### Pre-Phase: Code Map Refresh
 
-At the very start, capture the debug start time:
-```bash
-DF_DEBUG_START=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-```
+Before any other processing, ensure the code map is current:
+
+1. Attempt to read `dark-factory/code-map.md` header. If the file does not exist, go to step 4.
+2. Extract the `Git hash:` line value (trim whitespace). Validate it matches `/^[0-9a-f]{40}$/`. Run `git rev-parse HEAD`. If `git rev-parse HEAD` fails (no git repo, detached HEAD with no commits), log "Code map refresh skipped: git error" and proceed without a map.
+3. **Hash matches exactly**: proceed immediately to Step 1. No codemap-agent invocation. Total overhead: 2 operations.
+4. **Hash differs, invalid hash, or no map**: compute changed files via `git diff --name-only {stored_hash} HEAD` (or empty list if no stored hash). Invoke codemap-agent with `mode: "refresh"` (or `"full"` if no map exists), `stored_hash`, and `changed_files`.
+5. **Greenfield repo** (no source files detected by codemap-agent): codemap-agent writes "No code map — no source code yet" and returns. Proceed without a map.
+6. After codemap-agent completes: log a non-blocking suggestion: "Code map auto-generated. For a complete, reviewed map run `/df-onboard`."
+7. Proceed to Step 1.
 
 ### Step 1: Spawn 3 investigators in parallel
 
@@ -33,7 +38,7 @@ Take the developer's raw input and spawn **3 independent debug-agents simultaneo
 >
 > Before starting your investigation, read `dark-factory/project-profile.md` if it exists -- it provides a map of the project's architecture, conventions, and patterns. Focus on sections relevant to your investigation angle.
 >
-> Also read `dark-factory/code-map.md` if it exists -- use the **Entry Point Traces** and **Module Dependency Graph** sections to quickly trace call chains from entry points to the failure area without manually grepping the entire codebase.
+> Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 >
 > IMPORTANT: After your investigation, output your findings as a structured report with these sections: Execution Trace, Failure Point, Root Cause Hypothesis, Evidence (with file:line references). Do NOT write any files — just report your findings.
 
@@ -45,7 +50,7 @@ Take the developer's raw input and spawn **3 independent debug-agents simultaneo
 >
 > Before starting your investigation, read `dark-factory/project-profile.md` if it exists -- it provides a map of the project's architecture, conventions, and patterns. Focus on sections relevant to your investigation angle.
 >
-> Also read `dark-factory/code-map.md` if it exists -- use the **Shared Dependency Hotspots** section to understand which modules have high fan-in and may have been affected by recent changes.
+> Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 >
 > IMPORTANT: After your investigation, output your findings as a structured report with these sections: Recent Changes, When Introduced, Relevant Commits, Root Cause Hypothesis, Evidence (with commit refs and file:line references). Do NOT write any files — just report your findings.
 
@@ -57,7 +62,7 @@ Take the developer's raw input and spawn **3 independent debug-agents simultaneo
 >
 > Before starting your investigation, read `dark-factory/project-profile.md` if it exists -- it provides a map of the project's architecture, conventions, and patterns. Focus on sections relevant to your investigation angle.
 >
-> Also read `dark-factory/code-map.md` if it exists -- use the **Circular Dependencies**, **Cross-Cutting Concerns**, and **Module Dependency Graph** sections to identify systemic patterns and shared dependencies that could harbor the same bug.
+> Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 >
 > **Search scope**: Search the same module/directory as the bug FIRST. Only expand to codebase-wide search if the bug's root cause is in shared/core code (utilities, middleware, base classes, shared services). State which directories/modules you searched and why.
 >
@@ -123,23 +128,10 @@ Update `dark-factory/manifest.json`:
     "status": "active",
     "specPath": "dark-factory/specs/bugfixes/{name}.spec.md",
     "created": "{ISO timestamp}",
-    "rounds": 0,
-    "sessionId": "{name}"
+    "rounds": 0
   }
   ```
 - Write the updated manifest back
-
-### Step 5.5: Log the debug event
-
-After the manifest is written, fire the log event:
-```bash
-$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
-  --arg fn "{bug name}" \
-  --arg pt "{developer's raw input verbatim}" \
-  --arg started "$DF_DEBUG_START" \
-  '{"command":"df-debug","featureName":$fn,"sessionId":$fn,"startedAt":$started,"promptText":$pt}')"
-```
-**CRITICAL**: `promptText` must be the developer's **original input verbatim** — never any generated report or synthesized content.
 
 ### Step 6: Present holdout scenarios for review
 

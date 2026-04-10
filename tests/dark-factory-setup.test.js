@@ -2612,3 +2612,158 @@ describe("Token measurement — df-orchestrate --tag flag", () => {
 });
 // DF-PROMOTED-END: token-measurement
 
+// ===========================================================================
+// Promoted from Dark Factory holdout: codemap-pipeline
+// Root cause: agents explore codebase from scratch on every invocation — redundant, slow, inconsistent. Pipeline skills have no pre-phase to ensure the code map is current.
+// Guards: .claude/agents/codemap-agent.md, .claude/agents/spec-agent.md, .claude/agents/architect-agent.md, .claude/agents/code-agent.md, .claude/agents/debug-agent.md, .claude/agents/test-agent.md, .claude/agents/promote-agent.md, .claude/skills/df-intake/SKILL.md, .claude/skills/df-debug/SKILL.md, .claude/skills/df-orchestrate/SKILL.md, plugins/dark-factory/agents/codemap-agent.md, plugins/dark-factory/agents/spec-agent.md, plugins/dark-factory/agents/architect-agent.md, plugins/dark-factory/agents/code-agent.md, plugins/dark-factory/agents/debug-agent.md, plugins/dark-factory/agents/test-agent.md, plugins/dark-factory/agents/promote-agent.md, plugins/dark-factory/skills/df-intake/SKILL.md, plugins/dark-factory/skills/df-debug/SKILL.md, plugins/dark-factory/skills/df-orchestrate/SKILL.md
+// ===========================================================================
+// DF-PROMOTED-START: codemap-pipeline
+
+const BALANCED_SEARCH_POLICY = "it is always present and current";
+
+describe("codemap-pipeline — balanced search policy in all agents", () => {
+  const agentsWithPolicy = [
+    "spec-agent",
+    "architect-agent",
+    "code-agent",
+    "debug-agent",
+    "test-agent",
+    "promote-agent",
+  ];
+
+  for (const agentName of agentsWithPolicy) {
+    it(`${agentName} contains balanced search policy phrase`, () => {
+      const content = readAgent(agentName);
+      assert.ok(
+        content.includes(BALANCED_SEARCH_POLICY),
+        `${agentName} must contain balanced search policy: "it is always present and current"`
+      );
+    });
+  }
+});
+
+describe("codemap-pipeline — codemap-agent incremental refresh logic", () => {
+  it("codemap-agent contains incremental refresh mode section", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("Incremental Refresh Mode"),
+      "codemap-agent must contain 'Incremental Refresh Mode' section"
+    );
+  });
+
+  it("codemap-agent contains fan-in cap logic", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("fan-in cap") || content.includes("Fan-in cap"),
+      "codemap-agent must describe fan-in cap (20 modules)"
+    );
+  });
+
+  it("codemap-agent contains Git hash header format", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("Git hash:"),
+      "codemap-agent code map template must include 'Git hash:' header line"
+    );
+  });
+
+  it("codemap-agent contains Coverage header format", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("Coverage:") && content.includes("PARTIAL"),
+      "codemap-agent code map template must include 'Coverage: FULL | PARTIAL' header line"
+    );
+  });
+
+  it("codemap-agent sign-off is conditional on onboard-agent invocation", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("onboard-agent") && content.includes("sign-off"),
+      "codemap-agent must make sign-off conditional on onboard-agent invocation only"
+    );
+  });
+
+  it("codemap-agent pipeline hook invocation requires no sign-off", () => {
+    const content = readAgent("codemap-agent");
+    assert.ok(
+      content.includes("never require sign-off") ||
+        content.includes("NEVER require sign-off") ||
+        (content.includes("pre-pipeline hook") && content.includes("no sign-off")),
+      "codemap-agent must explicitly state no sign-off required for pre-pipeline hook invocations"
+    );
+  });
+});
+
+describe("codemap-pipeline — pre-phase in pipeline skills", () => {
+  const skillsWithPrePhase = ["df-intake", "df-debug", "df-orchestrate"];
+
+  for (const skillName of skillsWithPrePhase) {
+    it(`${skillName} contains code map pre-phase`, () => {
+      const content = readSkill(skillName);
+      assert.ok(
+        content.includes("Pre-Phase") || content.includes("Pre-phase"),
+        `${skillName} must contain a code map Pre-Phase section before spawning agents`
+      );
+    });
+
+    it(`${skillName} checks Git hash in pre-phase`, () => {
+      const content = readSkill(skillName);
+      assert.ok(
+        content.includes("Git hash") || content.includes("git rev-parse"),
+        `${skillName} pre-phase must check the Git hash for freshness`
+      );
+    });
+  }
+});
+
+describe("codemap-pipeline — plugin mirrors match source", () => {
+  const agentNames = [
+    "spec-agent",
+    "architect-agent",
+    "code-agent",
+    "debug-agent",
+    "test-agent",
+    "promote-agent",
+    "codemap-agent",
+  ];
+
+  for (const agentName of agentNames) {
+    it(`plugins ${agentName}.md matches source`, () => {
+      const source = fs.readFileSync(
+        path.join(ROOT, ".claude", "agents", `${agentName}.md`),
+        "utf8"
+      );
+      const plugin = fs.readFileSync(
+        path.join(ROOT, "plugins", "dark-factory", "agents", `${agentName}.md`),
+        "utf8"
+      );
+      assert.equal(
+        source,
+        plugin,
+        `Plugin ${agentName}.md must be identical to source after codemap-pipeline feature`
+      );
+    });
+  }
+
+  const skillNames = ["df-intake", "df-debug", "df-orchestrate"];
+
+  for (const skillName of skillNames) {
+    it(`plugins ${skillName} SKILL.md matches source`, () => {
+      const source = fs.readFileSync(
+        path.join(ROOT, ".claude", "skills", skillName, "SKILL.md"),
+        "utf8"
+      );
+      const plugin = fs.readFileSync(
+        path.join(ROOT, "plugins", "dark-factory", "skills", skillName, "SKILL.md"),
+        "utf8"
+      );
+      assert.equal(
+        source,
+        plugin,
+        `Plugin ${skillName} SKILL.md must be identical to source after codemap-pipeline feature`
+      );
+    });
+  }
+});
+// DF-PROMOTED-END: codemap-pipeline
+

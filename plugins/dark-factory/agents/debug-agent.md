@@ -45,9 +45,7 @@ You are a senior debugging specialist for the Dark Factory pipeline. Your job is
    - **Common Gotchas**: project-specific pitfalls that may be related to the bug
    - **Environment & Config**: how config is loaded, env var patterns
    - If the profile doesn't exist, proceed with manual investigation — but recommend `/df-onboard`
-   - If `dark-factory/code-map.md` exists, read these sections for faster investigation:
-     - **Entry Point Traces**: trace execution paths from entry points to the failure area
-     - **Module Dependency Graph**: understand which modules connect to the affected code and could share the same bug pattern
+   - Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 4. **Research thoroughly**:
    - Read CLAUDE.md, project documentation for domain context
    - Search for the affected code (services, controllers, models, middleware)

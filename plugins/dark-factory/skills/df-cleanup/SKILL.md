@@ -13,16 +13,11 @@ Optional: `--rebuild` — reconstruct the promoted test registry from annotation
 
 ## Process
 
-### 1. Log the event
-```bash
-$HOME/.df-factory/bin/log-event.sh "$(jq -cn '{"command":"df-cleanup","startedAt":now|todate}')"
-```
-
-### 2. Read Manifest
+### 1. Read Manifest
 - Read `dark-factory/manifest.json`
 - If manifest doesn't exist or is empty, report "No features tracked" and stop
 
-### 3. Promoted Test Health Check
+### 2. Promoted Test Health Check
 
 Before scanning the manifest for stuck features, verify the health of all promoted tests.
 
@@ -68,14 +63,14 @@ For each entry in the `promotedTests` array, check ALL of the following in a sin
 
 Report ALL issues at once, then ask the developer what to do. Do NOT auto-fix — missing tests, skipped tests, and failing tests require human judgment.
 
-### 4. Identify Issues
+### 3. Identify Issues
 Scan all features and categorize:
 
 - **Stuck at `passed`**: Holdout tests passed but promotion didn't complete. Retry promotion by spawning promote-agent.
 - **Stuck at `promoted`**: Promotion succeeded but cleanup didn't complete. Run cleanup (commit artifacts to git, delete files, remove from manifest).
 - **Stale `active`**: Status is `active` but created more than 7 days ago. List these for developer attention — they may be abandoned.
 
-### 5. Report
+### 4. Report
 Display a table:
 
 ```
@@ -86,18 +81,12 @@ old-thing        active     2026-03-01   ⚠ Stale (23 days) — review or remov
 done-feature     promoted   2026-03-20   Running cleanup...
 ```
 
-### 6. Execute Fixes
-For each stuck feature, **log a per-feature event before acting**:
-```bash
-$HOME/.df-factory/bin/log-event.sh "$(jq -cn \
-  --arg fn "{feature name}" \
-  '{"command":"df-cleanup","featureName":$fn,"sessionId":$fn,"startedAt":now|todate}')"
-```
-Then:
+### 5. Execute Fixes
+For each stuck feature:
 - **passed → promote**: Spawn promote-agent, then cleanup on success
 - **promoted → cleanup**: Commit all feature artifacts to git, delete files, remove from manifest
 
-### 7. Cleanup Steps (for promoted features)
+### 6. Cleanup Steps (for promoted features)
 1. Verify all feature artifacts are committed to git (`git status` to check for uncommitted changes)
 2. If uncommitted, commit: `"Archive {name}: spec + scenarios (promoted to permanent tests)"`
 3. Delete all feature artifacts:
@@ -109,12 +98,12 @@ Then:
 4. Remove the feature entry from `dark-factory/manifest.json`
 5. Commit the deletion: `"Cleanup {name}: artifacts deleted, tests promoted"`
 
-### 8. Handle Stale Features
+### 7. Handle Stale Features
 For stale `active` features, ask the developer:
 - **Keep** — leave it, maybe it's still in progress
 - **Remove** — commit artifacts to git, delete files, remove from manifest
 
-### 9. Confirm
+### 8. Confirm
 After all fixes, re-read manifest and display updated status table.
 
 ## Important

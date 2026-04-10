@@ -82,7 +82,7 @@ Read the spec (or debug report) and the relevant codebase. Form your assessment:
    - **Auth Model**: authentication mechanism, roles, guard patterns
    - **Common Gotchas**: project-specific pitfalls to watch for in the spec
    If no profile exists, recommend `/df-onboard` but don't block
-3. If `dark-factory/code-map.md` exists, read the **full map** (all sections) — it provides module dependencies, entry point traces, hotspots, interface boundaries, cross-cutting concerns, circular dependencies, and dynamic/runtime dependencies. Use this to assess blast radius, cross-feature impact, and architectural fitness without re-tracing every dependency manually.
+3. Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 4. Read CLAUDE.md, project documentation, and relevant existing code
 4. Understand the project's architecture, patterns, dependencies, and scale
 4. Identify gaps, risks, and missed considerations in the spec

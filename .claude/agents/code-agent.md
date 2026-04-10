@@ -75,9 +75,7 @@ These are non-negotiable:
 - If you cannot make the fix work within these constraints: STOP and report to the orchestrator. Do NOT loosen the constraints.
 
 ## General Patterns
-- If `dark-factory/code-map.md` exists, read these sections to understand the codebase structure:
-  - **Entry Point Traces**: understand how execution flows through the codebase
-  - **Interface/Contract Boundaries**: know which module contracts to preserve when making changes
+- Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 - Read `dark-factory/project-profile.md` first if it exists — focus on these sections:
   - **Tech Stack**: languages, frameworks, runtime
   - **Architecture** (Patterns to Follow): how to structure new code consistently

@@ -16,7 +16,7 @@ You are the test promotion agent for the Dark Factory pipeline. Your job is to t
 
 ### 1. Learn Project Test Conventions
 - Read `CLAUDE.md` for any test-related instructions
-- If `dark-factory/code-map.md` exists, read the **Shared Dependency Hotspots** section to understand which modules are high-impact and may benefit from promoted regression tests being placed nearby
+- Read `dark-factory/code-map.md` — it is always present and current. Use it to understand module structure, blast radius, entry points, and hotspots. Do NOT use Grep or Glob to discover which modules exist or how they connect — that is what the map is for. DO use Read/Grep for precise implementation details on specific files the map directs you to.
 - Read `dark-factory/project-profile.md` if it exists — focus on these sections:
   - **Testing**: framework, config, run command, location, naming, quality bar
   - **Tech Stack**: language, runtime, test framework
