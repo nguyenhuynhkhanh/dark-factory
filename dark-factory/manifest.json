@@ -27,6 +27,15 @@
       "rounds": 0,
       "group": null,
       "dependencies": ["codemap-pipeline"]
+    },
+    "token-measurement": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/token-measurement.spec.md",
+      "created": "2026-04-10T00:00:00Z",
+      "rounds": 0,
+      "group": null,
+      "dependencies": []
     }
   }
 }
