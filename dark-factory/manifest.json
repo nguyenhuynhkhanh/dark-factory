@@ -3,10 +3,13 @@
   "features": {
     "codemap-pipeline": {
       "type": "feature",
-      "status": "active",
+      "status": "promoted",
       "specPath": "dark-factory/specs/features/codemap-pipeline.spec.md",
       "created": "2026-04-09T00:00:00Z",
-      "rounds": 0,
+      "rounds": 1,
+      "passedAt": "2026-04-09T12:00:00Z",
+      "promotedAt": "2026-04-09T12:05:00Z",
+      "promotedTestPath": "tests/dark-factory-setup.test.js",
       "group": null,
       "dependencies": []
     },
