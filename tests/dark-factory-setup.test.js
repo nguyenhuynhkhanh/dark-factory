@@ -3047,3 +3047,193 @@ describe("serena-integration — plugin mirrors match source", () => {
   });
 });
 // DF-PROMOTED-END: serena-integration
+
+// DF-PROMOTED-START: playwright-onboard
+// Source: dark-factory/specs/features/playwright-onboard.spec.md
+// Promoted: 2026-04-15
+
+describe("playwright-onboard — UI Layer & E2E detection phase", () => {
+  const onboardContent = readAgent("onboard-agent");
+
+  it("onboard-agent has Phase 2.5 for UI Layer & E2E Detection", () => {
+    assert.ok(
+      onboardContent.includes("Phase 2.5") && onboardContent.includes("UI Layer & E2E Detection"),
+      "onboard-agent must contain Phase 2.5: UI Layer & E2E Detection"
+    );
+  });
+
+  it("onboard-agent scans both dependencies and devDependencies", () => {
+    assert.ok(
+      onboardContent.includes("dependencies") && onboardContent.includes("devDependencies"),
+      "onboard-agent must mention scanning both dependencies and devDependencies"
+    );
+  });
+
+  it("onboard-agent contains frontend framework allowlist with all required packages", () => {
+    const requiredPackages = ["`react`", "`vue`", "`@angular/core`", "`next`", "`nuxt`", "`svelte`", "`@sveltejs/kit`", "`@remix-run/react`", "`gatsby`", "`astro`", "`solid-js`", "`@builder.io/qwik`", "`ember-source`", "`lit`"];
+    for (const pkg of requiredPackages) {
+      assert.ok(
+        onboardContent.includes(pkg),
+        `Frontend framework allowlist must include ${pkg}`
+      );
+    }
+  });
+
+  it("onboard-agent contains E2E framework allowlist", () => {
+    assert.ok(
+      onboardContent.includes("`@playwright/test`") && onboardContent.includes("`playwright`") && onboardContent.includes("`cypress`"),
+      "E2E allowlist must include @playwright/test, playwright, and cypress"
+    );
+  });
+
+  it("onboard-agent checks for playwright.config and cypress.config files", () => {
+    assert.ok(
+      onboardContent.includes("playwright.config") && onboardContent.includes("cypress.config"),
+      "onboard-agent must check for playwright.config.* and cypress.config.* files"
+    );
+  });
+
+  it("onboard-agent requires BOTH dependency AND config for E2E Ready = yes", () => {
+    assert.ok(
+      onboardContent.includes("E2E Ready") && onboardContent.includes("BOTH"),
+      "onboard-agent must state E2E Ready requires BOTH dependency AND config"
+    );
+  });
+
+  it("onboard-agent handles dependency-without-config case", () => {
+    assert.ok(
+      onboardContent.includes("E2E Ready` = `no"),
+      "onboard-agent must set E2E Ready to no when only dependency exists without config"
+    );
+  });
+
+  it("onboard-agent infers framework from config file when no dependency (global install)", () => {
+    assert.ok(
+      onboardContent.includes("infer"),
+      "onboard-agent must handle inferring framework from config file for global installs"
+    );
+  });
+
+  it("onboard-agent handles config-without-dependency as E2E Ready = yes", () => {
+    assert.ok(
+      onboardContent.includes("E2E Ready` = `yes"),
+      "onboard-agent must set E2E Ready to yes when config exists even without dependency"
+    );
+  });
+
+  it("onboard-agent uses explicit allowlist with exact matching (no substrings)", () => {
+    assert.ok(
+      onboardContent.includes("explicit allowlist") || onboardContent.includes("allowlist"),
+      "onboard-agent must use an explicit allowlist approach"
+    );
+    assert.ok(
+      onboardContent.includes("do NOT match substrings"),
+      "onboard-agent must require exact package name matching, not substrings"
+    );
+  });
+
+  it("onboard-agent scans for ambiguous UI files (.html, .vue, .svelte, .jsx, .tsx)", () => {
+    assert.ok(
+      onboardContent.includes(".html") && onboardContent.includes(".tsx") && onboardContent.includes(".jsx"),
+      "onboard-agent must scan for ambiguous UI file extensions"
+    );
+  });
+
+  it("onboard-agent asks developer about UI layer when ambiguous signals found", () => {
+    assert.ok(
+      onboardContent.includes("ask the developer"),
+      "onboard-agent must ask developer when UI detection is ambiguous"
+    );
+  });
+
+  it("onboard-agent handles declined ambiguity answer with unknown", () => {
+    assert.ok(
+      onboardContent.includes("unknown") && onboardContent.includes("decline"),
+      "onboard-agent must set UI Layer to unknown when developer declines"
+    );
+  });
+
+  it("onboard-agent supports comma-separated multiple frameworks", () => {
+    assert.ok(
+      onboardContent.includes("comma-separated"),
+      "onboard-agent must support listing multiple frameworks comma-separated"
+    );
+  });
+
+  it("onboard-agent handles both Playwright and Cypress detected", () => {
+    assert.ok(
+      onboardContent.includes("Playwright, Cypress"),
+      "onboard-agent must list both E2E frameworks comma-separated when both detected"
+    );
+  });
+
+  it("onboard-agent handles missing package.json", () => {
+    assert.ok(
+      onboardContent.includes("no `package.json`") || onboardContent.includes("No `package.json`"),
+      "onboard-agent must handle missing package.json gracefully"
+    );
+  });
+
+  it("onboard-agent handles malformed package.json", () => {
+    assert.ok(
+      onboardContent.includes("malformed") && onboardContent.includes("unknown"),
+      "onboard-agent must set fields to unknown for malformed package.json"
+    );
+  });
+
+  it("onboard-agent handles greenfield projects with unknown defaults", () => {
+    assert.ok(
+      onboardContent.includes("greenfield") || onboardContent.includes("no source code"),
+      "onboard-agent must handle greenfield projects"
+    );
+  });
+
+  it("onboard-agent records four UI/E2E fields in profile Tech Stack", () => {
+    assert.ok(
+      onboardContent.includes("UI Layer") && onboardContent.includes("Frontend Framework") && onboardContent.includes("E2E Framework") && onboardContent.includes("E2E Ready"),
+      "onboard-agent must record all four UI/E2E fields"
+    );
+  });
+
+  it("onboard-agent runs no install commands during detection (NFR-1)", () => {
+    // The phase should NOT contain any npm install, npx, or process spawning instructions
+    // Verify the spec's constraint is reflected: detection is file-read only
+    assert.ok(
+      onboardContent.includes("project root"),
+      "onboard-agent must specify reading package.json at project root (file-read only)"
+    );
+  });
+});
+
+describe("playwright-onboard — profile template fields", () => {
+  it("project-profile-template.md contains all four new Tech Stack fields", () => {
+    const template = fs.readFileSync(path.join(DF_DIR, "templates", "project-profile-template.md"), "utf8");
+    assert.ok(template.includes("UI Layer"), "Template must have UI Layer field");
+    assert.ok(template.includes("Frontend Framework"), "Template must have Frontend Framework field");
+    assert.ok(template.includes("E2E Framework"), "Template must have E2E Framework field");
+    assert.ok(template.includes("E2E Ready"), "Template must have E2E Ready field");
+  });
+
+  it("new fields appear after CI/CD in the Tech Stack table", () => {
+    const template = fs.readFileSync(path.join(DF_DIR, "templates", "project-profile-template.md"), "utf8");
+    const cicdPos = template.indexOf("CI/CD");
+    const uiLayerPos = template.indexOf("UI Layer");
+    assert.ok(cicdPos > -1 && uiLayerPos > -1, "Both CI/CD and UI Layer must exist in template");
+    assert.ok(uiLayerPos > cicdPos, "UI Layer must appear after CI/CD in the template");
+  });
+});
+
+describe("playwright-onboard — plugin mirrors match source", () => {
+  it("plugins onboard-agent.md matches source after playwright-onboard", () => {
+    const source = fs.readFileSync(path.join(ROOT, ".claude", "agents", "onboard-agent.md"), "utf8");
+    const plugin = fs.readFileSync(path.join(ROOT, "plugins", "dark-factory", "agents", "onboard-agent.md"), "utf8");
+    assert.equal(source, plugin, "Plugin onboard-agent.md must match source after playwright-onboard");
+  });
+
+  it("plugins project-profile-template.md matches source after playwright-onboard", () => {
+    const source = fs.readFileSync(path.join(DF_DIR, "templates", "project-profile-template.md"), "utf8");
+    const plugin = fs.readFileSync(path.join(ROOT, "plugins", "dark-factory", "templates", "project-profile-template.md"), "utf8");
+    assert.equal(source, plugin, "Plugin project-profile-template.md must match source after playwright-onboard");
+  });
+});
+// DF-PROMOTED-END: playwright-onboard

@@ -34,6 +34,10 @@ Developers: review sections carefully based on which agents you expect to run. E
 | Test Framework | {e.g., Jest 29} |
 | Package Manager | {e.g., pnpm 9} |
 | CI/CD | {e.g., GitHub Actions} |
+| UI Layer | {e.g., yes -- React 18 detected} |
+| Frontend Framework | {e.g., React, or none} |
+| E2E Framework | {e.g., Playwright, Cypress, or none} |
+| E2E Ready | {e.g., yes -- Playwright installed + config present} |
 
 ## Architecture
 ### Structure

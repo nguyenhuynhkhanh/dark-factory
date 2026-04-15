@@ -60,6 +60,51 @@ Determine what kind of project you're looking at:
    - If Serena tools are NOT available: record `| Serena MCP | not detected — agents will use Read/Grep |` in the Tech Stack table.
    - This detection result determines whether code-agent and debug-agent attempt Serena calls in future pipeline runs.
 
+### Phase 2.5: UI Layer & E2E Detection
+
+6. **Detect frontend framework presence**:
+   - Read `package.json` at the project root. If no `package.json` exists, set all four UI/E2E fields to `unknown`, note the absence in Structural Notes, and skip to Phase 3.
+   - If `package.json` is malformed or unreadable, set all four UI/E2E fields to `unknown`, warn the developer in Structural Notes, and skip to Phase 3.
+   - Scan both `dependencies` and `devDependencies` for the following **explicit allowlist** of frontend framework packages:
+     - `react`, `vue`, `@angular/core`, `next`, `nuxt`, `svelte`, `@sveltejs/kit`, `@remix-run/react`, `gatsby`, `astro`, `solid-js`, `@builder.io/qwik`, `ember-source`, `lit`
+   - Match package names exactly — do NOT match substrings (e.g., `react-icons` is NOT a framework match, only `react` itself).
+   - If one framework is detected, record its display name (e.g., `React`, `Vue`, `Next.js`, `Angular`, `Nuxt`, `Svelte`, `SvelteKit`, `Remix`, `Gatsby`, `Astro`, `Solid`, `Qwik`, `Ember`, `Lit`).
+   - If multiple frameworks are detected, list all of them comma-separated (e.g., `React, Vue`).
+   - If any frontend framework is detected, set `UI Layer` = `yes`.
+
+7. **Detect E2E framework presence**:
+   - Scan both `dependencies` and `devDependencies` for the following **explicit allowlist** of E2E framework packages:
+     - `@playwright/test`, `playwright`, `cypress`
+   - If detected, record the framework name: `Playwright` (for `@playwright/test` or `playwright`) or `Cypress` (for `cypress`).
+   - If both Playwright and Cypress are detected, list both comma-separated (e.g., `Playwright, Cypress`).
+   - If no E2E framework is found in dependencies, check for E2E config files as a secondary signal (step 8). If a config file exists without a dependency, infer the framework from the config (e.g., `playwright.config.ts` implies Playwright).
+
+8. **Check for E2E config files**:
+   - Look for `playwright.config.*` (any extension: `.ts`, `.js`, `.mjs`, `.cjs`) at the project root.
+   - Look for `cypress.config.*` (any extension: `.ts`, `.js`, `.mjs`, `.cjs`) at the project root.
+   - Set `E2E Ready` = `yes` ONLY when BOTH an E2E framework dependency is detected (step 7) AND a corresponding config file exists. If only a dependency exists but no config, set `E2E Ready` = `no`. If only a config exists but no dependency (possible global install), set `E2E Framework` to the inferred framework and `E2E Ready` = `yes`.
+
+9. **Handle ambiguous UI detection**:
+   - If NO frontend framework was detected in step 6 AND the project has `package.json` with dependencies:
+     - Scan the project for `.html`, `.vue`, `.svelte`, `.jsx`, `.tsx` files.
+     - If a meaningful quantity of these files exist (more than incidental — e.g., more than 2-3 files, or files in dedicated directories like `public/`, `views/`, `pages/`, `src/`):
+       - Flag this as ambiguous. During Phase 6, ask the developer: "I found [N] template/UI files ([extensions]) but no frontend framework in package.json. Does this project have a browser-facing UI layer?"
+       - If developer answers yes: set `UI Layer` = `yes`, `Frontend Framework` = `none`.
+       - If developer answers no or declines to answer: set `UI Layer` to `no` (if answered no) or `unknown` (if declined).
+     - If no meaningful quantity of these files exists: set `UI Layer` = `no` without asking.
+   - If no `package.json` exists (already handled in step 6 — all fields are `unknown`).
+
+10. **Handle greenfield projects**:
+    - If the project has no source code (greenfield, detected in Phase 1): set all four fields to `unknown`.
+    - During Phase 6, ask the developer about their intended UI layer.
+
+11. **Record results in profile Tech Stack table**:
+    - Add four rows to the Tech Stack table:
+      - `| UI Layer | {yes/no/unknown} |`
+      - `| Frontend Framework | {detected name(s) or none or unknown} |`
+      - `| E2E Framework | {Playwright/Cypress/both/none/unknown} |`
+      - `| E2E Ready | {yes/no/unknown} |`
+
 ### Phase 3: Architecture & Patterns
 
 5. **Map the architecture**:
