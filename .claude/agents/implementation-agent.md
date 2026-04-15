@@ -102,6 +102,19 @@ Rules: zero file overlap between tracks, sequential if dependencies exist, max 4
 - Failures and rounds < 3: extract behavioral failure descriptions (NO holdout content), re-spawn only failing tracks.
 - Failures and rounds = 3: report to developer.
 
+### Flaky E2E Routing
+
+After reading results in Step 3, check for `flakyE2E: true` in the results metadata. The `flakyE2E` boolean in summary metadata is the **SINGLE authoritative signal** for flakiness routing — do not infer flakiness from any other field.
+
+If `flakyE2E: true` is found:
+- **Separate** flaky scenarios (type: `flaky-e2e`) from clean failures (type: `e2e` or `unit` with FAIL).
+- **For clean failures**: proceed with normal code-agent re-run (existing behavior above).
+- **For flaky scenarios**: do **NOT** re-spawn code-agent. Instead, spawn spec-agent with bugfix mode, passing the flaky scenario details and the original spec context.
+  > Flaky E2E detected for {scenarios}. Spawning spec-agent for bugfix spec rather than re-running code-agent.
+- **If ALL failures are flaky** (no clean failures): skip code-agent re-run entirely. Only spawn spec-agent for bugfix.
+- **If mix of flaky and clean failures**: spawn code-agent for clean failures **AND** spec-agent for flaky ones in parallel.
+- Flaky scenarios do **not** count toward the 3-round retry max for code-agent re-runs.
+
 ## Bugfix Mode — Red-Green Cycle
 
 ### Step 1: Red Phase (Prove the Bug)

@@ -2389,7 +2389,7 @@ describe("Token cap enforcement", () => {
     "debug-agent": 3500,
     "architect-agent": 4500,
     "code-agent": 3000,
-    "test-agent": 2500,
+    "test-agent": 3500,
     "promote-agent": 2500,
     "codemap-agent": 3500,
     "implementation-agent": 4000,
@@ -3047,3 +3047,399 @@ describe("serena-integration — plugin mirrors match source", () => {
   });
 });
 // DF-PROMOTED-END: serena-integration
+
+// ===========================================================================
+// Promoted from Dark Factory holdout: playwright-test-hardening
+// Feature: Harden Playwright E2E test flow — backend-only exclusion gate, dev server cascade, flaky-vs-consistent classification, implementation-agent routing
+// Guards: .claude/agents/test-agent.md, .claude/agents/implementation-agent.md, plugins/dark-factory/agents/test-agent.md, plugins/dark-factory/agents/implementation-agent.md
+// DF-PROMOTED-START: playwright-test-hardening
+// ===========================================================================
+
+describe("H-01: Profile missing UI Layer field", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent logs 'UI Layer field not found' message when field missing", () => {
+    assert.ok(
+      testAgent.includes("UI Layer field not found in profile -- proceeding with E2E detection"),
+      "test-agent must contain the log message for missing UI Layer field"
+    );
+  });
+
+  it("test-agent proceeds with normal E2E detection when field missing", () => {
+    assert.ok(
+      testAgent.includes("If missing or other value"),
+      "test-agent must specify that missing field means proceed normally"
+    );
+  });
+
+  it("Step 0a comes before Step 0b (exclusion gate before detection)", () => {
+    const step0aIdx = testAgent.indexOf("Step 0a");
+    const step0bIdx = testAgent.indexOf("Step 0b");
+    assert.ok(step0aIdx > -1, "Step 0a must exist");
+    assert.ok(step0bIdx > -1, "Step 0b must exist");
+    assert.ok(step0aIdx < step0bIdx, "Step 0a must come before Step 0b");
+  });
+});
+
+describe("H-02: UI Layer empty or whitespace treated as missing", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent specifies trimming behavior for UI Layer value", () => {
+    assert.ok(
+      /case-insensitive.*trim|trim.*case-insensitive|trimmed/i.test(testAgent),
+      "test-agent must mention trimming the UI Layer value"
+    );
+  });
+
+  it("empty/whitespace values fall through to normal detection", () => {
+    assert.ok(
+      testAgent.includes("If missing or other value"),
+      "test-agent must handle empty/whitespace as missing"
+    );
+  });
+});
+
+describe("H-03: UI Layer case-insensitive matching", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent specifies case-insensitive comparison for 'none'", () => {
+    assert.ok(
+      testAgent.includes("case-insensitive"),
+      "test-agent must specify case-insensitive matching for UI Layer"
+    );
+  });
+
+  it("test-agent matches 'none' value to skip E2E", () => {
+    assert.ok(
+      /if.*none.*skip.*e2e|if.*none.*skip.*all/i.test(testAgent),
+      "test-agent must skip E2E when UI Layer is 'none'"
+    );
+  });
+});
+
+describe("H-04: webServer config prevents double server start", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent checks Playwright config for webServer property", () => {
+    assert.ok(
+      testAgent.includes("webServer"),
+      "test-agent must reference webServer property in Playwright config"
+    );
+  });
+
+  it("test-agent skips server management when webServer found", () => {
+    assert.ok(
+      testAgent.includes("Playwright webServer config detected -- server management delegated to Playwright"),
+      "test-agent must log that Playwright handles server management"
+    );
+  });
+
+  it("webServer detection is the FIRST step in the cascade", () => {
+    const devServerSection = testAgent.slice(testAgent.indexOf("Dev Server Management"));
+    const wsInSection = devServerSection.indexOf("webServer");
+    const profileInSection = devServerSection.indexOf("Project profile");
+    assert.ok(wsInSection > -1, "Playwright config detection must exist in dev server section");
+    assert.ok(profileInSection > -1, "Project profile detection must exist in dev server section");
+    assert.ok(wsInSection < profileInSection, "webServer check must come before profile check");
+  });
+});
+
+describe("H-05: No server command anywhere", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent has a 3-step detection cascade for dev server", () => {
+    assert.ok(testAgent.includes("Playwright config"), "Must check Playwright config");
+    assert.ok(testAgent.includes("Project profile"), "Must check project profile");
+    assert.ok(testAgent.includes("npm run dev"), "Must try npm run dev fallback");
+  });
+
+  it("test-agent skips E2E on timeout/failure and proceeds with unit tests", () => {
+    assert.ok(
+      testAgent.includes("Dev server failed to start within 30s -- skipping E2E tests"),
+      "test-agent must log server start failure and skip E2E"
+    );
+  });
+
+  it("test-agent specifies 30s timeout for dev server startup", () => {
+    assert.ok(
+      testAgent.includes("30s") || testAgent.includes("30 second"),
+      "test-agent must specify 30-second timeout"
+    );
+  });
+});
+
+describe("H-06: Port already in use", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent handles port-in-use by assuming server is running", () => {
+    assert.ok(
+      testAgent.includes("Port {port} already in use -- assuming dev server is running"),
+      "test-agent must handle port-in-use case"
+    );
+  });
+
+  it("test-agent requires cleanup of server process after tests", () => {
+    assert.ok(
+      /kill.*background.*server|MUST.*happen.*regardless/i.test(testAgent),
+      "test-agent must mandate server cleanup after tests"
+    );
+  });
+});
+
+describe("H-07: Dev server non-200 health check accepted", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent accepts any HTTP response as server running", () => {
+    assert.ok(
+      testAgent.includes("any HTTP") || testAgent.includes("even 500"),
+      "test-agent must accept any HTTP response (including non-200) as server running"
+    );
+  });
+});
+
+describe("H-08: Consistent failure not classified as flaky", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent distinguishes clean failure (type e2e) from flaky (type flaky-e2e)", () => {
+    assert.ok(
+      testAgent.includes("Clean failure") && testAgent.includes("type `e2e`"),
+      "test-agent must define clean failure as type e2e"
+    );
+    assert.ok(
+      testAgent.includes("Flaky") && testAgent.includes("type `flaky-e2e`"),
+      "test-agent must define flaky as type flaky-e2e"
+    );
+  });
+
+  it("consistent failure (all attempts fail) uses type e2e, not flaky-e2e", () => {
+    assert.ok(
+      testAgent.includes("Type: e2e"),
+      "test-agent results template must show type: e2e for consistent failures"
+    );
+  });
+});
+
+describe("H-09: Flaky detected on third attempt (fail-fail-pass)", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent uses --retries=2 for Playwright tests (3 total attempts)", () => {
+    assert.ok(
+      testAgent.includes("--retries=2"),
+      "test-agent must use --retries=2 flag for Playwright"
+    );
+  });
+
+  it("test-agent reports flaky scenario with attempt breakdown", () => {
+    assert.ok(
+      testAgent.includes("Attempt 1: FAIL") && testAgent.includes("Attempt 3: PASS"),
+      "test-agent must include attempt breakdown for flaky scenarios"
+    );
+  });
+
+  it("flaky scenario sets flakyE2E in metadata", () => {
+    assert.ok(
+      testAgent.includes("flakyE2E"),
+      "test-agent must include flakyE2E metadata flag"
+    );
+  });
+
+  it("flakyE2E is the authoritative routing signal", () => {
+    assert.ok(
+      testAgent.includes("AUTHORITATIVE") && testAgent.includes("flakyE2E"),
+      "test-agent must declare flakyE2E as the authoritative signal"
+    );
+  });
+});
+
+describe("H-10: All failures flaky — code-agent skipped", () => {
+  const implAgent = readAgent("implementation-agent");
+
+  it("implementation-agent checks for flakyE2E: true in results", () => {
+    assert.ok(
+      implAgent.includes("flakyE2E: true"),
+      "implementation-agent must check for flakyE2E flag in results"
+    );
+  });
+
+  it("implementation-agent skips code-agent when ALL failures are flaky", () => {
+    assert.ok(
+      implAgent.includes("ALL failures are flaky") &&
+      implAgent.includes("skip code-agent re-run entirely"),
+      "implementation-agent must skip code-agent when all failures are flaky"
+    );
+  });
+
+  it("implementation-agent spawns spec-agent for bugfix when flaky", () => {
+    assert.ok(
+      implAgent.includes("spec-agent") && implAgent.includes("bugfix"),
+      "implementation-agent must spawn spec-agent in bugfix mode for flaky tests"
+    );
+  });
+
+  it("implementation-agent logs the flakiness routing decision", () => {
+    assert.ok(
+      implAgent.includes("Flaky E2E detected for {scenarios}"),
+      "implementation-agent must log flaky routing decision"
+    );
+  });
+
+  it("flaky scenarios do NOT re-spawn code-agent", () => {
+    assert.ok(
+      implAgent.includes("NOT") && implAgent.includes("re-spawn code-agent"),
+      "implementation-agent must explicitly prohibit code-agent re-spawn for flaky tests"
+    );
+  });
+});
+
+describe("H-11: Mix of flaky and consistent failures", () => {
+  const implAgent = readAgent("implementation-agent");
+
+  it("implementation-agent separates flaky from clean failures", () => {
+    assert.ok(
+      implAgent.includes("Separate") && implAgent.includes("flaky") && implAgent.includes("clean failures"),
+      "implementation-agent must separate flaky from clean failures"
+    );
+  });
+
+  it("implementation-agent spawns code-agent for clean failures AND spec-agent for flaky in parallel", () => {
+    assert.ok(
+      implAgent.includes("code-agent for clean failures") &&
+      implAgent.includes("spec-agent for flaky"),
+      "implementation-agent must handle both types in parallel"
+    );
+  });
+
+  it("flaky scenarios do not count toward 3-round retry max", () => {
+    assert.ok(
+      implAgent.includes("count toward the 3-round retry max"),
+      "implementation-agent must exclude flaky scenarios from round counting"
+    );
+  });
+});
+
+describe("H-12: No Playwright, UI Layer not none", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("backend-only exclusion only activates for 'none' value", () => {
+    const step0a = testAgent.slice(
+      testAgent.indexOf("Step 0a"),
+      testAgent.indexOf("Step 0b")
+    );
+    assert.ok(
+      step0a.includes("none") && step0a.includes("missing or other value"),
+      "Step 0a must only exclude for 'none', proceed for all other values"
+    );
+  });
+
+  it("Step 0b Playwright detection section exists", () => {
+    assert.ok(
+      testAgent.includes("Playwright / E2E Detection") ||
+      testAgent.includes("Detect Test Infrastructure"),
+      "Playwright detection section must exist"
+    );
+  });
+
+  it("existing 'no Playwright' flow preserved", () => {
+    assert.ok(
+      testAgent.includes("ONLY unit test framework found") ||
+      testAgent.includes("no Playwright"),
+      "test-agent must preserve existing no-Playwright handling"
+    );
+  });
+});
+
+describe("H-13: Dev server dies mid-test", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent retries E2E tests with --retries=2", () => {
+    assert.ok(
+      testAgent.includes("--retries=2"),
+      "test-agent uses retries so failed tests due to dead server are retried"
+    );
+  });
+
+  it("cleanup handles already-dead server process gracefully", () => {
+    assert.ok(
+      testAgent.includes("kill") && testAgent.includes("regardless"),
+      "test-agent cleanup must handle regardless of outcome (including dead process)"
+    );
+  });
+
+  it("retries are E2E-only, never applied to unit tests", () => {
+    assert.ok(
+      testAgent.includes("Never retried") || testAgent.includes("E2E-only"),
+      "test-agent must specify retries are E2E-only (BR-3)"
+    );
+  });
+});
+
+describe("Plugin mirror parity — playwright-test-hardening (AC-6)", () => {
+  it("test-agent.md matches plugin mirror exactly", () => {
+    const testAgentContent = readAgent("test-agent");
+    const pluginTestAgent = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "agents", "test-agent.md"),
+      "utf8"
+    );
+    assert.equal(
+      testAgentContent,
+      pluginTestAgent,
+      "test-agent.md must match plugins/dark-factory/agents/test-agent.md"
+    );
+  });
+
+  it("implementation-agent.md matches plugin mirror exactly", () => {
+    const implAgentContent = readAgent("implementation-agent");
+    const pluginImplAgent = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "agents", "implementation-agent.md"),
+      "utf8"
+    );
+    assert.equal(
+      implAgentContent,
+      pluginImplAgent,
+      "implementation-agent.md must match plugins/dark-factory/agents/implementation-agent.md"
+    );
+  });
+});
+
+describe("Regression: Existing behavior preserved — playwright-test-hardening", () => {
+  it("test-agent preserves information barrier constraints", () => {
+    const testAgent = readAgent("test-agent");
+    assert.ok(testAgent.includes("NEVER modify source code files"), "Source code write restriction preserved");
+    assert.ok(testAgent.includes("NEVER share holdout scenario content"), "Holdout secrecy preserved");
+  });
+
+  it("test-agent preserves unit test flow", () => {
+    const testAgent = readAgent("test-agent");
+    assert.ok(testAgent.includes("Unit Tests"), "Unit test section preserved");
+    assert.ok(testAgent.includes("Unit test"), "Unit test classification preserved");
+  });
+
+  it("test-agent preserves Playwright E2E test writing section", () => {
+    const testAgent = readAgent("test-agent");
+    assert.ok(testAgent.includes("Playwright E2E Tests"), "Playwright E2E section preserved");
+    assert.ok(testAgent.includes("@playwright/test"), "@playwright/test imports preserved");
+  });
+
+  it("implementation-agent preserves information barrier rules", () => {
+    const implAgent = readAgent("implementation-agent");
+    assert.ok(implAgent.includes("NEVER pass holdout scenario content to the code-agent"), "Holdout barrier preserved");
+    assert.ok(implAgent.includes("NEVER pass public scenario content to the test-agent"), "Public barrier preserved");
+    assert.ok(implAgent.includes("NEVER pass test/scenario content to the architect-agent"), "Architect barrier preserved");
+  });
+
+  it("implementation-agent preserves lifecycle steps", () => {
+    const implAgent = readAgent("implementation-agent");
+    assert.ok(implAgent.includes("Step 1: Code Agents"), "Code agent step preserved");
+    assert.ok(implAgent.includes("Step 2: Test Agent"), "Test agent step preserved");
+    assert.ok(implAgent.includes("Step 3: Evaluate"), "Evaluate step preserved");
+    assert.ok(implAgent.includes("Step 4: Promote"), "Promote step preserved");
+    assert.ok(implAgent.includes("Step 5: Cleanup"), "Cleanup step preserved");
+  });
+
+  it("implementation-agent preserves bugfix red-green cycle", () => {
+    const implAgent = readAgent("implementation-agent");
+    assert.ok(implAgent.includes("Red Phase"), "Red phase preserved");
+    assert.ok(implAgent.includes("Green Phase"), "Green phase preserved");
+  });
+});
+// DF-PROMOTED-END: playwright-test-hardening

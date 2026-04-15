@@ -32,6 +32,22 @@
       "holdoutScenarioCount": 3,
       "annotationFormat": "header-comment",
       "sectionMarkers": true
+    },
+    {
+      "feature": "playwright-test-hardening",
+      "type": "feature",
+      "files": [
+        {
+          "path": "tests/dark-factory-setup.test.js",
+          "colocated": true,
+          "startMarker": "// DF-PROMOTED-START: playwright-test-hardening",
+          "endMarker": "// DF-PROMOTED-END: playwright-test-hardening"
+        }
+      ],
+      "promotedAt": "2026-04-15T05:30:00Z",
+      "holdoutScenarioCount": 13,
+      "annotationFormat": "header-comment",
+      "sectionMarkers": true
     }
   ]
 }
