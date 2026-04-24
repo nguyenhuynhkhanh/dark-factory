@@ -96,6 +96,22 @@
       "holdoutScenarioCount": 6,
       "annotationFormat": "header-comment",
       "sectionMarkers": true
+    },
+    {
+      "feature": "project-memory-foundation",
+      "type": "feature",
+      "files": [
+        {
+          "path": "tests/dark-factory-setup.test.js",
+          "colocated": true,
+          "startMarker": "// DF-PROMOTED-START: project-memory-foundation",
+          "endMarker": "// DF-PROMOTED-END: project-memory-foundation"
+        }
+      ],
+      "promotedAt": "2026-04-24T12:00:00Z",
+      "holdoutScenarioCount": 16,
+      "annotationFormat": "header-comment",
+      "sectionMarkers": true
     }
   ]
 }

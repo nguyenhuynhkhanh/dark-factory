@@ -30,12 +30,17 @@
     },
     "project-memory-foundation": {
       "type": "feature",
-      "status": "active",
+      "status": "promoted",
       "specPath": "dark-factory/specs/features/project-memory-foundation.spec.md",
       "created": "2026-04-21T00:00:00Z",
-      "rounds": 0,
+      "rounds": 1,
       "group": "project-memory",
-      "dependencies": []
+      "dependencies": [],
+      "passedAt": "2026-04-24T12:00:00Z",
+      "promotedAt": "2026-04-24T12:00:00Z",
+      "promotedTestPath": "tests/dark-factory-setup.test.js",
+      "actualFiles": 16,
+      "estimatedFiles": 12
     },
     "project-memory-onboard": {
       "type": "feature",
