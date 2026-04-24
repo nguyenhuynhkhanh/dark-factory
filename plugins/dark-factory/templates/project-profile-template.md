@@ -88,7 +88,7 @@ Developers: review sections carefully based on which agents you expect to run. E
 {Include this section ONLY when the project has domain-specific constraints that affect implementation -- e.g., multi-tenant architecture, compliance requirements (HIPAA, PCI), domain-driven design with bounded contexts, or complex entity lifecycle rules. Omit for simple CRUD apps, libraries, or CLIs.}
 
 - **Core entities**: {e.g., Tenant, User, Organization with relationships}
-- **Invariants**: {e.g., "A user belongs to exactly one tenant", "Orders cannot be modified after fulfillment"}
+- **Invariants**: {e.g., "A user belongs to exactly one tenant", "Orders cannot be modified after fulfillment"} — see `dark-factory/memory/invariants-*.md` for the canonical invariant registry (domain-sharded; populated by onboard-agent and promote-agent).
 - **Domain events**: {e.g., "UserCreated triggers welcome email and audit log"}
 
 ## Testing

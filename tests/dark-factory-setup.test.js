@@ -4140,3 +4140,395 @@ describe("token-opt-architect-review — spec-agent complexity classification", 
   });
 });
 // DF-PROMOTED-END: token-opt-architect-review
+
+// ===========================================================================
+// project-memory-foundation — structural foundation tests
+// ===========================================================================
+// DF-PROMOTED-START: project-memory-foundation
+
+describe("project-memory-foundation — memory directory structure", () => {
+  const MEMORY_DIR = path.join(ROOT, "dark-factory", "memory");
+
+  it("dark-factory/memory/ directory exists", () => {
+    assert.ok(
+      fs.existsSync(MEMORY_DIR) && fs.statSync(MEMORY_DIR).isDirectory(),
+      "dark-factory/memory/ must be a regular directory"
+    );
+  });
+
+  const expectedFiles = [
+    "index.md",
+    "invariants-security.md",
+    "invariants-architecture.md",
+    "invariants-api.md",
+    "decisions-security.md",
+    "decisions-architecture.md",
+    "decisions-api.md",
+    "ledger.md",
+  ];
+
+  for (const filename of expectedFiles) {
+    it(`dark-factory/memory/${filename} exists`, () => {
+      const filePath = path.join(MEMORY_DIR, filename);
+      assert.ok(
+        fs.existsSync(filePath) && fs.statSync(filePath).isFile(),
+        `dark-factory/memory/${filename} must be a regular file`
+      );
+    });
+
+    it(`dark-factory/memory/${filename} has valid YAML frontmatter with required keys`, () => {
+      const content = fs.readFileSync(path.join(MEMORY_DIR, filename), "utf8");
+      const fm = parseFrontmatter(content);
+      assert.ok(fm, `${filename} must have YAML frontmatter`);
+      assert.ok(fm.version === "1", `${filename} frontmatter must have version: 1, got ${fm.version}`);
+      assert.ok(fm.lastUpdated && fm.lastUpdated.length > 0, `${filename} frontmatter must have non-empty lastUpdated`);
+      assert.ok(fm.generatedBy && fm.generatedBy.length > 0, `${filename} frontmatter must have non-empty generatedBy`);
+      assert.ok(fm.gitHash && fm.gitHash.length > 0, `${filename} frontmatter must have non-empty gitHash`);
+    });
+  }
+});
+
+describe("project-memory-foundation — index.md specific assertions", () => {
+  const INDEX_PATH = path.join(ROOT, "dark-factory", "memory", "index.md");
+
+  it("index.md frontmatter has entryCount field", () => {
+    const content = fs.readFileSync(INDEX_PATH, "utf8");
+    const fm = parseFrontmatter(content);
+    assert.ok(fm, "index.md must have YAML frontmatter");
+    assert.ok(
+      "entryCount" in fm,
+      "index.md frontmatter must have entryCount field"
+    );
+  });
+
+  it("index.md frontmatter has shardCount field", () => {
+    const content = fs.readFileSync(INDEX_PATH, "utf8");
+    const fm = parseFrontmatter(content);
+    assert.ok(fm, "index.md must have YAML frontmatter");
+    assert.ok(
+      "shardCount" in fm,
+      "index.md frontmatter must have shardCount field"
+    );
+  });
+
+  it("index.md ships with entryCount: 0 on initial install", () => {
+    const content = fs.readFileSync(INDEX_PATH, "utf8");
+    const fm = parseFrontmatter(content);
+    // After the frontmatter, count ## heading rows in the body
+    const bodyMatch = content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+    const body = bodyMatch ? bodyMatch[1] : "";
+    const headingRows = body.split("\n").filter(line => line.startsWith("## "));
+    const declaredCount = parseInt(fm.entryCount, 10);
+    assert.equal(
+      headingRows.length,
+      declaredCount,
+      `index.md entryCount (${declaredCount}) must equal actual heading rows (${headingRows.length})`
+    );
+  });
+
+  it("index.md entry rows that exist match the correct format", () => {
+    const content = fs.readFileSync(INDEX_PATH, "utf8");
+    const bodyMatch = content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+    const body = bodyMatch ? bodyMatch[1] : "";
+    const headingRows = body.split("\n").filter(line => line.startsWith("## "));
+    const formatRegex = /^## (INV-\d{4}|DEC-\d{4}|FEAT-\d{4}) \[type:[^\]]+\] \[domain:[^\]]+\] \[tags:[^\]]*\] \[status:[^\]]+\] \[shard:[^\]]+\]/;
+    for (const row of headingRows) {
+      assert.ok(
+        formatRegex.test(row),
+        `index.md heading row must match format: ## {ID} [type:...] [domain:...] [tags:...] [status:...] [shard:...]\n  Got: ${row}`
+      );
+    }
+  });
+
+  it("index.md does not contain TEMPLATE entries", () => {
+    const content = fs.readFileSync(INDEX_PATH, "utf8");
+    const bodyMatch = content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+    const body = bodyMatch ? bodyMatch[1] : "";
+    const templateRows = body.split("\n").filter(line => line.startsWith("## ") && line.includes("TEMPLATE"));
+    assert.equal(
+      templateRows.length,
+      0,
+      `index.md must not contain TEMPLATE entries (found ${templateRows.length})`
+    );
+  });
+});
+
+describe("project-memory-foundation — shard files contain zero entries", () => {
+  const MEMORY_DIR = path.join(ROOT, "dark-factory", "memory");
+  const shardFiles = [
+    "invariants-security.md",
+    "invariants-architecture.md",
+    "invariants-api.md",
+    "decisions-security.md",
+    "decisions-architecture.md",
+    "decisions-api.md",
+  ];
+
+  for (const filename of shardFiles) {
+    it(`${filename} body contains zero entry headings`, () => {
+      const content = fs.readFileSync(path.join(MEMORY_DIR, filename), "utf8");
+      const bodyMatch = content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+      const body = bodyMatch ? bodyMatch[1] : "";
+      const headingRows = body.split("\n").filter(line => line.startsWith("## "));
+      assert.equal(
+        headingRows.length,
+        0,
+        `${filename} must ship with zero entry headings (found ${headingRows.length})`
+      );
+    });
+
+    it(`${filename} body does not contain TEMPLATE word`, () => {
+      const content = fs.readFileSync(path.join(MEMORY_DIR, filename), "utf8");
+      const bodyMatch = content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+      const body = bodyMatch ? bodyMatch[1] : "";
+      assert.ok(
+        !body.includes("TEMPLATE"),
+        `${filename} body must not contain the word TEMPLATE`
+      );
+    });
+  }
+});
+
+describe("project-memory-foundation — ledger.md append-only note", () => {
+  it("ledger.md contains a prominent append-only note within the first 20 lines", () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "memory", "ledger.md"),
+      "utf8"
+    );
+    const lines = content.split("\n").slice(0, 20);
+    const hasAppendOnlyNote = lines.some(
+      line => line.toLowerCase().includes("append-only") || line.toLowerCase().includes("append only")
+    );
+    assert.ok(
+      hasAppendOnlyNote,
+      "ledger.md must contain an append-only note within the first 20 lines"
+    );
+  });
+
+  it("ledger.md ships with zero ledger entry headings", () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "memory", "ledger.md"),
+      "utf8"
+    );
+    const bodyMatch = content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+    const body = bodyMatch ? bodyMatch[1] : "";
+    const entryHeadings = body.split("\n").filter(line => /^## FEAT-\d{4}:/.test(line));
+    assert.equal(
+      entryHeadings.length,
+      0,
+      `ledger.md must ship with zero FEAT-NNNN entry headings (found ${entryHeadings.length})`
+    );
+  });
+});
+
+describe("project-memory-foundation — project-memory-template.md schema completeness", () => {
+  const TEMPLATE_PATH = path.join(ROOT, "dark-factory", "templates", "project-memory-template.md");
+
+  it("project-memory-template.md exists", () => {
+    assert.ok(
+      fs.existsSync(TEMPLATE_PATH),
+      "dark-factory/templates/project-memory-template.md must exist"
+    );
+  });
+
+  // FR-8 — invariant fields
+  const invariantFields = [
+    "id", "title", "rule", "scope.modules", "scope.entities",
+    "source", "sourceRef", "status", "supersededBy", "introducedBy",
+    "introducedAt", "rationale", "domain", "tags", "shard",
+    "enforced_by", "enforcement", "guards", "referencedBy",
+  ];
+
+  for (const field of invariantFields) {
+    it(`template documents invariant field: ${field}`, () => {
+      const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+      assert.ok(
+        content.includes(`\`${field}\``) || content.includes(`**${field}**`) || content.includes(field),
+        `project-memory-template.md must document invariant field: ${field}`
+      );
+    });
+  }
+
+  // FR-9 — decision fields
+  const decisionFields = [
+    "id", "title", "context", "decision", "rationale", "alternatives",
+    "status", "supersededBy", "introducedBy", "introducedAt", "domain",
+    "tags", "shard", "referencedBy",
+  ];
+
+  for (const field of decisionFields) {
+    it(`template documents decision field: ${field}`, () => {
+      const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+      assert.ok(
+        content.includes(`\`${field}\``) || content.includes(`**${field}**`) || content.includes(field),
+        `project-memory-template.md must document decision field: ${field}`
+      );
+    });
+  }
+
+  // FR-10 — ledger fields
+  const ledgerFields = [
+    "id", "name", "summary", "promotedAt", "introducedInvariants",
+    "introducedDecisions", "promotedTests", "gitSha",
+  ];
+
+  for (const field of ledgerFields) {
+    it(`template documents ledger field: ${field}`, () => {
+      const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+      assert.ok(
+        content.includes(`\`${field}\``) || content.includes(`**${field}**`) || content.includes(field),
+        `project-memory-template.md must document ledger field: ${field}`
+      );
+    });
+  }
+
+  it("template documents enforced_by OR enforcement escape hatch (FR-12)", () => {
+    const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+    assert.ok(
+      content.includes("enforced_by") && content.includes("enforcement"),
+      "template must document both enforced_by and the enforcement escape hatch"
+    );
+    assert.ok(
+      content.includes("runtime") && content.includes("manual"),
+      "template must document runtime and manual as enforcement values"
+    );
+  });
+
+  it("template documents zero-padded ID format and promote-agent assignment (FR-13)", () => {
+    const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+    assert.ok(
+      content.includes("INV-0001") || content.includes("zero-padded"),
+      "template must document zero-padded 4-digit ID format"
+    );
+    assert.ok(
+      content.includes("promote-agent"),
+      "template must state that IDs are assigned by promote-agent"
+    );
+    assert.ok(
+      content.includes("never reused") || content.includes("never reuse"),
+      "template must state that IDs are never reused"
+    );
+  });
+
+  it("template documents index heading format with all bracket components", () => {
+    const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+    assert.ok(content.includes("[type:"), "template must document [type:...] bracket");
+    assert.ok(content.includes("[domain:"), "template must document [domain:...] bracket");
+    assert.ok(content.includes("[tags:"), "template must document [tags:...] bracket");
+    assert.ok(content.includes("[status:"), "template must document [status:...] bracket");
+    assert.ok(content.includes("[shard:"), "template must document [shard:...] bracket");
+  });
+
+  it("template documents token budget soft limits", () => {
+    const content = fs.readFileSync(TEMPLATE_PATH, "utf8");
+    assert.ok(
+      content.includes("4,000 tokens") || content.includes("4000 tokens"),
+      "template must document index soft token budget (~4,000 tokens)"
+    );
+    assert.ok(
+      content.includes("8,000 tokens") || content.includes("8000 tokens"),
+      "template must document per-shard soft token budget (~8,000 tokens)"
+    );
+  });
+});
+
+describe("project-memory-foundation — context rule references memory index", () => {
+  const RULE_PATH = path.join(ROOT, ".claude", "rules", "dark-factory-context.md");
+
+  it("dark-factory-context.md references dark-factory/memory/index.md as 4th always-load source", () => {
+    const content = fs.readFileSync(RULE_PATH, "utf8");
+    assert.ok(
+      content.includes("dark-factory/memory/index.md"),
+      "dark-factory-context.md must reference dark-factory/memory/index.md"
+    );
+  });
+
+  it("dark-factory-context.md states missing index is warn-and-proceed (non-blocking)", () => {
+    const content = fs.readFileSync(RULE_PATH, "utf8");
+    assert.ok(
+      (content.includes("warn") && content.includes("proceed")) ||
+      content.includes("not yet onboarded"),
+      "dark-factory-context.md must state that a missing index is non-blocking (warn and proceed)"
+    );
+  });
+
+  it("dark-factory-context.md does NOT reference individual shard filenames", () => {
+    const content = fs.readFileSync(RULE_PATH, "utf8");
+    const shardNames = [
+      "invariants-security.md",
+      "invariants-architecture.md",
+      "invariants-api.md",
+      "decisions-security.md",
+      "decisions-architecture.md",
+      "decisions-api.md",
+    ];
+    for (const shard of shardNames) {
+      assert.ok(
+        !content.includes(shard),
+        `dark-factory-context.md must NOT reference shard file: ${shard}`
+      );
+    }
+  });
+
+  it("dark-factory-context.md still references project-profile.md, code-map.md, manifest.json", () => {
+    const content = fs.readFileSync(RULE_PATH, "utf8");
+    assert.ok(content.includes("project-profile.md"), "rule must still reference project-profile.md");
+    assert.ok(content.includes("code-map.md"), "rule must still reference code-map.md");
+    assert.ok(content.includes("manifest.json"), "rule must still reference manifest.json");
+  });
+});
+
+describe("project-memory-foundation — profile template pointer note", () => {
+  it("project-profile-template.md Invariants bullet references memory invariants shards", () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "templates", "project-profile-template.md"),
+      "utf8"
+    );
+    assert.ok(
+      content.includes("invariants-"),
+      "project-profile-template.md must reference invariants-*.md shards"
+    );
+    assert.ok(
+      content.includes("dark-factory/memory/"),
+      "project-profile-template.md must reference dark-factory/memory/ path"
+    );
+    // Ensure existing Invariants bullet is preserved
+    assert.ok(
+      content.includes("Invariants"),
+      "project-profile-template.md must retain the existing Invariants bullet"
+    );
+  });
+});
+
+describe("project-memory-foundation — gitignore check", () => {
+  it("dark-factory/memory/ is NOT gitignored", () => {
+    const gitignorePath = path.join(ROOT, ".gitignore");
+    if (!fs.existsSync(gitignorePath)) return; // no gitignore = not ignored
+    const content = fs.readFileSync(gitignorePath, "utf8");
+    const lines = content.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+    // Check no pattern would gitignore the memory directory
+    const problematic = lines.filter(line =>
+      line === "dark-factory/memory/" ||
+      line === "dark-factory/memory" ||
+      line === "dark-factory/memory/*.md" ||
+      (line === "dark-factory/*" && !content.includes("!dark-factory/memory"))
+    );
+    assert.equal(
+      problematic.length,
+      0,
+      `dark-factory/memory/ must NOT be gitignored. Found problematic patterns: ${problematic.join(", ")}`
+    );
+  });
+
+  it("dark-factory/results/ remains gitignored", () => {
+    const gitignorePath = path.join(ROOT, ".gitignore");
+    if (!fs.existsSync(gitignorePath)) return;
+    const content = fs.readFileSync(gitignorePath, "utf8");
+    assert.ok(
+      content.includes("dark-factory/results/") || content.includes("dark-factory/results"),
+      "dark-factory/results/ must remain gitignored"
+    );
+  });
+});
+
+// DF-PROMOTED-END: project-memory-foundation

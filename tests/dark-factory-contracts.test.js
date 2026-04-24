@@ -653,3 +653,45 @@ describe("Information barrier contracts (both sides)", () => {
     );
   });
 });
+
+// ===========================================================================
+// 5. project-memory-foundation — plugin mirror parity (FR-20)
+// ===========================================================================
+
+describe("project-memory-foundation — plugin mirror parity", () => {
+  it("plugins/dark-factory/templates/project-memory-template.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "templates", "project-memory-template.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "templates", "project-memory-template.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin project-memory-template.md must match source exactly");
+  });
+
+  it("plugins/dark-factory/rules/dark-factory-context.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, ".claude", "rules", "dark-factory-context.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "rules", "dark-factory-context.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin dark-factory-context.md must match source exactly");
+  });
+
+  it("plugins/dark-factory/templates/project-profile-template.md matches source", () => {
+    const source = fs.readFileSync(
+      path.join(ROOT, "dark-factory", "templates", "project-profile-template.md"),
+      "utf8"
+    );
+    const plugin = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "templates", "project-profile-template.md"),
+      "utf8"
+    );
+    assert.equal(source, plugin, "Plugin project-profile-template.md must match source exactly");
+  });
+});
