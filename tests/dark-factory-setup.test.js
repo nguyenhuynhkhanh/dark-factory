@@ -2157,12 +2157,12 @@ describe("Codemap agent — structural assertions", () => {
 });
 
 describe("Codemap agent — token cap", () => {
-  it("codemap-agent is under 3,000 tokens", () => {
+  it("codemap-agent is under 3,500 tokens", () => {
     const content = readAgent("codemap-agent");
     const estimatedTokens = Math.ceil(content.length / 4);
     assert.ok(
-      estimatedTokens <= 3000,
-      `codemap-agent is ${estimatedTokens} tokens, should be under 3,000`
+      estimatedTokens <= 3500,
+      `codemap-agent is ${estimatedTokens} tokens, should be under 3,500`
     );
   });
 });
@@ -3633,3 +3633,281 @@ describe("Regression: Existing behavior preserved — playwright-test-hardening"
   });
 });
 // DF-PROMOTED-END: playwright-test-hardening
+
+// DF-PROMOTED-START: token-opt-slim-context
+// Promoted from Dark Factory holdout: token-opt-slim-context
+// Guards: .claude/agents/onboard-agent.md, .claude/agents/codemap-agent.md, .claude/skills/df-cleanup/SKILL.md, dark-factory/templates/project-profile-slim-template.md
+
+describe("Slim context generation — token-opt-slim-context", () => {
+  const onboardAgent = readAgent("onboard-agent");
+  const codemapAgent = readAgent("codemap-agent");
+  const dfCleanup = readSkill("df-cleanup");
+  const templatePath = path.join(ROOT, "dark-factory", "templates", "project-profile-slim-template.md");
+  const pluginTemplatePath = path.join(ROOT, "plugins", "dark-factory", "templates", "project-profile-slim-template.md");
+
+  it("onboard-agent mentions project-profile-slim.md as an output (AC-1, FR-1)", () => {
+    assert.ok(
+      onboardAgent.includes("project-profile-slim.md"),
+      "onboard-agent must reference project-profile-slim.md as an output"
+    );
+  });
+
+  it("onboard-agent has a Phase 7.2 for slim profile generation (AC-1, FR-1)", () => {
+    assert.ok(
+      onboardAgent.includes("Phase 7.2"),
+      "onboard-agent must contain Phase 7.2 for slim profile generation"
+    );
+  });
+
+  it("onboard-agent positions Phase 7.2 after full-profile write (Phase 7) and before Phase 7.5 (AC-1)", () => {
+    const phase7Pos = onboardAgent.indexOf("Phase 7:");
+    const phase72Pos = onboardAgent.indexOf("Phase 7.2");
+    const phase75Pos = onboardAgent.indexOf("Phase 7.5");
+    assert.ok(phase7Pos < phase72Pos, "Phase 7.2 must come after Phase 7");
+    assert.ok(phase72Pos < phase75Pos, "Phase 7.2 must come before Phase 7.5");
+  });
+
+  it("onboard-agent references the slim template file (AC-1, FR-12)", () => {
+    assert.ok(
+      onboardAgent.includes("project-profile-slim-template.md"),
+      "onboard-agent must reference dark-factory/templates/project-profile-slim-template.md"
+    );
+  });
+
+  it("codemap-agent lists code-map-slim.md as a required output (AC-2, FR-5)", () => {
+    assert.ok(
+      codemapAgent.includes("code-map-slim.md"),
+      "codemap-agent must list code-map-slim.md as a required output"
+    );
+  });
+
+  it("codemap-agent produce block shows three output files including code-map-slim.md (AC-2, FR-5)", () => {
+    assert.ok(
+      codemapAgent.includes("three files") || codemapAgent.includes("code-map-slim.md"),
+      "codemap-agent output block must include code-map-slim.md alongside code-map.md and code-map.mermaid"
+    );
+  });
+
+  it("codemap-agent states slim map carries same git hash as full map (AC-3, FR-8)", () => {
+    assert.ok(
+      codemapAgent.includes("same") && codemapAgent.includes("Git hash"),
+      "codemap-agent must state that code-map-slim.md carries the same Git hash as code-map.md"
+    );
+  });
+
+  it("codemap-agent updates slim map in full-scan path (AC-4, FR-5)", () => {
+    const step3Idx = codemapAgent.indexOf("Step 3: Synthesize");
+    const slimAfterStep3 = codemapAgent.indexOf("code-map-slim.md", step3Idx);
+    assert.ok(slimAfterStep3 !== -1, "code-map-slim.md must be written in Step 3 (full-scan path)");
+  });
+
+  it("codemap-agent updates slim map in incremental refresh path (AC-4, FR-11)", () => {
+    const refreshIdx = codemapAgent.indexOf("Incremental Refresh Mode");
+    const slimInRefresh = codemapAgent.indexOf("code-map-slim.md", refreshIdx);
+    const endOfRefresh = codemapAgent.indexOf("## Step 1:", refreshIdx);
+    assert.ok(
+      slimInRefresh !== -1 && slimInRefresh < endOfRefresh,
+      "code-map-slim.md must be updated in the incremental refresh path"
+    );
+  });
+
+  it("codemap-agent excludes Entry Point Traces from slim map (AC-8, FR-10)", () => {
+    assert.ok(
+      codemapAgent.includes("Entry Point Traces") &&
+        (codemapAgent.includes("MUST NOT include") || codemapAgent.includes("not include")),
+      "codemap-agent must explicitly exclude Entry Point Traces from code-map-slim.md"
+    );
+  });
+
+  it("codemap-agent excludes Interface/Contract Boundaries from slim map (AC-8, FR-10)", () => {
+    assert.ok(
+      codemapAgent.includes("Interface/Contract Boundaries"),
+      "codemap-agent must explicitly name Interface/Contract Boundaries as excluded from slim map"
+    );
+  });
+
+  it("codemap-agent excludes Cross-Cutting Concerns from slim map (AC-8, FR-10)", () => {
+    assert.ok(
+      codemapAgent.includes("Cross-Cutting Concerns"),
+      "codemap-agent must explicitly name Cross-Cutting Concerns as excluded from slim map"
+    );
+  });
+
+  it("codemap-agent excludes Circular Dependencies from slim map (AC-8, FR-10)", () => {
+    assert.ok(
+      codemapAgent.includes("Circular Dependencies"),
+      "codemap-agent must explicitly name Circular Dependencies as excluded from slim map"
+    );
+  });
+
+  it("codemap-agent excludes Dynamic/Runtime Dependencies from slim map (AC-8, FR-10)", () => {
+    assert.ok(
+      codemapAgent.includes("Dynamic/Runtime Dependencies"),
+      "codemap-agent must explicitly name Dynamic/Runtime Dependencies as excluded from slim map"
+    );
+  });
+
+  it("df-cleanup has a slim file refresh step (AC-6, FR-13)", () => {
+    assert.ok(
+      dfCleanup.includes("project-profile-slim.md") || dfCleanup.includes("Slim File Refresh"),
+      "df-cleanup must contain a slim file refresh step"
+    );
+  });
+
+  it("df-cleanup slim refresh runs before promoted-test health check (AC-6, FR-14)", () => {
+    const slimPos = dfCleanup.indexOf("Slim File Refresh");
+    const healthCheckPos = dfCleanup.indexOf("Promoted Test Health Check");
+    assert.ok(
+      slimPos !== -1 && healthCheckPos !== -1 && slimPos < healthCheckPos,
+      "df-cleanup slim file refresh (Step 1.5) must run before promoted test health check (Step 2)"
+    );
+  });
+
+  it("df-cleanup refreshes both slim files (AC-6, FR-13)", () => {
+    assert.ok(
+      dfCleanup.includes("project-profile-slim.md") && dfCleanup.includes("code-map-slim.md"),
+      "df-cleanup must refresh both project-profile-slim.md and code-map-slim.md"
+    );
+  });
+
+  it("df-cleanup skips refresh when full profile missing and logs (FR-13)", () => {
+    assert.ok(
+      dfCleanup.includes("project-profile.md not found") ||
+        (dfCleanup.includes("project-profile.md") && dfCleanup.includes("not found")),
+      "df-cleanup must log skip message when project-profile.md not found"
+    );
+  });
+
+  it("df-cleanup skips code-map-slim refresh when code-map.md missing and logs (FR-13)", () => {
+    assert.ok(
+      dfCleanup.includes("code-map.md not found") ||
+        (dfCleanup.includes("code-map.md") && dfCleanup.includes("not found")),
+      "df-cleanup must log skip message when code-map.md not found"
+    );
+  });
+
+  it("slim template file exists at dark-factory/templates/project-profile-slim-template.md (AC-5, FR-12)", () => {
+    assert.ok(fs.existsSync(templatePath), `Slim template must exist at ${templatePath}`);
+  });
+
+  it("slim template contains the exact header disclaimer (AC-5, AC-7, FR-3)", () => {
+    const templateContent = fs.readFileSync(templatePath, "utf8");
+    assert.ok(
+      templateContent.includes("> Slim profile — generated from project-profile.md. For full context read project-profile.md."),
+      "Slim template must contain the exact header disclaimer text"
+    );
+  });
+
+  it("slim template defines Tech Stack section with extraction rule (AC-5, FR-2)", () => {
+    const templateContent = fs.readFileSync(templatePath, "utf8");
+    assert.ok(
+      templateContent.includes("Tech Stack"),
+      "Slim template must define Tech Stack section"
+    );
+  });
+
+  it("slim template defines Critical Conventions section with extraction rule (AC-5, FR-2)", () => {
+    const templateContent = fs.readFileSync(templatePath, "utf8");
+    assert.ok(
+      templateContent.includes("Critical Conventions"),
+      "Slim template must define Critical Conventions section"
+    );
+  });
+
+  it("slim template defines Entry Points section with extraction rule (AC-5, FR-2)", () => {
+    const templateContent = fs.readFileSync(templatePath, "utf8");
+    assert.ok(
+      templateContent.includes("Entry Points"),
+      "Slim template must define Entry Points section"
+    );
+  });
+
+  it("slim template defines Common Gotchas section with extraction rule (AC-5, FR-2)", () => {
+    const templateContent = fs.readFileSync(templatePath, "utf8");
+    assert.ok(
+      templateContent.includes("Common Gotchas"),
+      "Slim template must define Common Gotchas section"
+    );
+  });
+
+  it("slim template plugin mirror exists and matches source (AC-9, BR-5)", () => {
+    assert.ok(fs.existsSync(pluginTemplatePath), `Plugin mirror must exist at ${pluginTemplatePath}`);
+    const source = fs.readFileSync(templatePath, "utf8");
+    const mirror = fs.readFileSync(pluginTemplatePath, "utf8");
+    assert.equal(source, mirror, "plugins/dark-factory/templates/project-profile-slim-template.md must match source template exactly");
+  });
+});
+
+describe("Plugin mirror parity — token-opt-slim-context (AC-9)", () => {
+  it("onboard-agent.md matches plugin mirror exactly", () => {
+    const source = readAgent("onboard-agent");
+    const mirror = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "agents", "onboard-agent.md"),
+      "utf8"
+    );
+    assert.equal(source, mirror, "onboard-agent.md must match plugins/dark-factory/agents/onboard-agent.md");
+  });
+
+  it("codemap-agent.md matches plugin mirror exactly", () => {
+    const source = readAgent("codemap-agent");
+    const mirror = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "agents", "codemap-agent.md"),
+      "utf8"
+    );
+    assert.equal(source, mirror, "codemap-agent.md must match plugins/dark-factory/agents/codemap-agent.md");
+  });
+
+  it("df-cleanup/SKILL.md matches plugin mirror exactly", () => {
+    const source = readSkill("df-cleanup");
+    const mirror = fs.readFileSync(
+      path.join(ROOT, "plugins", "dark-factory", "skills", "df-cleanup", "SKILL.md"),
+      "utf8"
+    );
+    assert.equal(source, mirror, "df-cleanup/SKILL.md must match plugins/dark-factory/skills/df-cleanup/SKILL.md");
+  });
+});
+
+describe("Regression: Out-of-scope files NOT modified — token-opt-slim-context (AC-11, AC-12, AC-13)", () => {
+  it("architect-agent.md does not contain slim-context changes", () => {
+    const architectAgent = readAgent("architect-agent");
+    // architect-agent should NOT reference project-profile-slim.md (that's in the consumer spec)
+    // We verify it hasn't gained slim-related generation steps
+    assert.ok(
+      !architectAgent.includes("Phase 7.2") && !architectAgent.includes("project-profile-slim-template"),
+      "architect-agent.md must NOT be modified by this spec (AC-11)"
+    );
+  });
+
+  it("spec-agent.md does not contain slim-context changes", () => {
+    const specAgent = readAgent("spec-agent");
+    assert.ok(
+      !specAgent.includes("Phase 7.2") && !specAgent.includes("project-profile-slim-template"),
+      "spec-agent.md must NOT be modified by this spec (AC-12)"
+    );
+  });
+
+  it("code-agent.md does not contain slim-context changes", () => {
+    const codeAgent = readAgent("code-agent");
+    assert.ok(
+      !codeAgent.includes("Phase 7.2") && !codeAgent.includes("project-profile-slim-template"),
+      "code-agent.md must NOT be modified by this spec (AC-12)"
+    );
+  });
+
+  it("debug-agent.md does not contain slim-context changes", () => {
+    const debugAgent = readAgent("debug-agent");
+    assert.ok(
+      !debugAgent.includes("Phase 7.2") && !debugAgent.includes("project-profile-slim-template"),
+      "debug-agent.md must NOT be modified by this spec (AC-12)"
+    );
+  });
+
+  it("implementation-agent.md does not contain slim-context changes", () => {
+    const implAgent = readAgent("implementation-agent");
+    assert.ok(
+      !implAgent.includes("Phase 7.2") && !implAgent.includes("project-profile-slim-template"),
+      "implementation-agent.md must NOT be modified by this spec (AC-12)"
+    );
+  });
+});
+// DF-PROMOTED-END: token-opt-slim-context

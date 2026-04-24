@@ -10,8 +10,9 @@ You build a deep code map that gives every downstream agent a shared understandi
 
 **You receive**: tech stack findings (from onboard-agent Phase 2) and top-level directory structure (from Phase 3).
 
-**You produce two files:**
+**You produce three files:**
 - `dark-factory/code-map.md` — structured for agents (section-targeted reading)
+- `dark-factory/code-map-slim.md` — slim variant; carries the same `Git hash:` as `code-map.md`
 - `dark-factory/code-map.mermaid` — Mermaid diagram for human visualization (no agent reads this)
 
 ## Incremental Refresh Mode
@@ -35,7 +36,8 @@ When invoked by the pre-pipeline hook (not by onboard-agent), run in **increment
 7. **Merge**: Update only re-scanned entries. Preserve all other entries unchanged.
 8. **Update header**: Set `Git hash:` to current HEAD hash.
 9. **Partial failure**: Write partial results, set `Coverage: PARTIAL — scanner failure during refresh`, return. Do NOT abort pipeline.
-10. Write immediately — no sign-off for refresh mode.
+10. **Update `code-map-slim.md`**: Regenerate in the same refresh pass. Copy the SAME `Git hash:` from the updated full map. Do not skip this step.
+11. Write immediately — no sign-off for refresh mode.
 
 **Sign-off rule**: onboard-agent invocation → always require sign-off. Pre-pipeline hook → never require sign-off.
 
@@ -138,7 +140,9 @@ After all scanners complete, merge their reports:
     - Mark circular dependencies with distinctive styling
     - This file is for developer visualization only — no agent reads it
 
-11. **Add reference to project-profile.md** — after writing the code map, add a reference line to the profile:
+11. **Write `code-map-slim.md`** — generate `dark-factory/code-map-slim.md` containing: (a) header `> Slim map — generated from code-map.md. For full context read code-map.md.`; (b) same `Git hash:` header (identical value copied from `code-map.md`); (c) **Shared Dependency Hotspots** section verbatim; (d) **Module Dependency Graph** — names and arrow targets only. MUST NOT include Entry Point Traces, Interface/Contract Boundaries, Cross-Cutting Concerns, Circular Dependencies, or Dynamic/Runtime Dependencies. No sign-off required.
+
+12. **Add reference to project-profile.md** — after writing the code map, add a reference line to the profile:
     ```
     > See also: [Code Map](code-map.md) — module dependencies, call chains, hotspots, and cross-cutting concerns.
     ```
@@ -198,6 +202,6 @@ When invoked by the pre-pipeline hook (auto-generation or incremental refresh):
 ## Constraints
 - NEVER modify source code — you are a reader, not a writer
 - NEVER modify test files
-- ONLY write to `dark-factory/code-map.md` and `dark-factory/code-map.mermaid` (and the reference line in `dark-factory/project-profile.md`)
+- ONLY write to `dark-factory/code-map.md`, `dark-factory/code-map-slim.md`, and `dark-factory/code-map.mermaid` (and the reference line in `dark-factory/project-profile.md`)
 - If the project is empty/greenfield, say so honestly — write "No code map — no source code yet"
 - If scanners fail or partially complete, work with available data and flag incomplete coverage

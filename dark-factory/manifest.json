@@ -1,4 +1,89 @@
 {
   "version": 1,
-  "features": {}
+  "features": {
+    "playwright-onboard": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/playwright-onboard.spec.md",
+      "created": "2026-04-15T00:00:00Z",
+      "rounds": 0,
+      "group": "playwright-e2e",
+      "dependencies": []
+    },
+    "playwright-test-hardening": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/playwright-test-hardening.spec.md",
+      "created": "2026-04-15T00:00:00Z",
+      "rounds": 0,
+      "group": "playwright-e2e",
+      "dependencies": ["playwright-onboard"]
+    },
+    "playwright-lifecycle": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/playwright-lifecycle.spec.md",
+      "created": "2026-04-15T00:00:00Z",
+      "rounds": 0,
+      "group": "playwright-e2e",
+      "dependencies": ["playwright-onboard", "playwright-test-hardening"]
+    },
+    "project-memory-foundation": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/project-memory-foundation.spec.md",
+      "created": "2026-04-21T00:00:00Z",
+      "rounds": 0,
+      "group": "project-memory",
+      "dependencies": []
+    },
+    "project-memory-onboard": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/project-memory-onboard.spec.md",
+      "created": "2026-04-21T00:00:00Z",
+      "rounds": 0,
+      "group": "project-memory",
+      "dependencies": ["project-memory-foundation"]
+    },
+    "project-memory-consumers": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/project-memory-consumers.spec.md",
+      "created": "2026-04-21T00:00:00Z",
+      "rounds": 0,
+      "group": "project-memory",
+      "dependencies": ["project-memory-foundation"]
+    },
+    "project-memory-lifecycle": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/project-memory-lifecycle.spec.md",
+      "created": "2026-04-21T00:00:00Z",
+      "rounds": 0,
+      "group": "project-memory",
+      "dependencies": ["project-memory-foundation", "project-memory-consumers", "project-memory-onboard"]
+    },
+    "token-opt-slim-context": {
+      "type": "feature",
+      "status": "promoted",
+      "specPath": "dark-factory/specs/features/token-opt-slim-context.spec.md",
+      "created": "2026-04-24T00:00:00Z",
+      "rounds": 1,
+      "group": "token-optimization",
+      "dependencies": [],
+      "passedAt": "2026-04-24T00:00:00Z",
+      "promotedAt": "2026-04-24T00:00:00Z",
+      "promotedTestPath": "tests/dark-factory-setup.test.js"
+    },
+    "token-opt-architect-review": {
+      "type": "feature",
+      "status": "active",
+      "specPath": "dark-factory/specs/features/token-opt-architect-review.spec.md",
+      "created": "2026-04-24T00:00:00Z",
+      "rounds": 0,
+      "group": "token-optimization",
+      "dependencies": ["token-opt-slim-context"]
+    }
+  }
 }

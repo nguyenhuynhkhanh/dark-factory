@@ -197,6 +197,21 @@ Spawn the codemap-agent as a sub-agent to build the code map:
 
 Read the profile output template from `dark-factory/templates/project-profile-template.md` and use it as the structure for the profile you write.
 
+## Phase 7.2: Generate Slim Profile
+
+After writing `dark-factory/project-profile.md` and before Phase 7.5, generate and write `dark-factory/project-profile-slim.md`.
+
+- Read `dark-factory/templates/project-profile-slim-template.md` to understand the structure and extraction rules for the slim profile.
+- Extract the following from the full `dark-factory/project-profile.md` you just wrote:
+  - The header disclaimer line (exact text defined in the template).
+  - The Tech Stack table rows verbatim.
+  - 3–5 critical-conventions bullet points from the Architecture / Patterns to Follow or Structural Notes sections.
+  - The top 2–3 entry points from Entry Point Traces (names only; omit call chain prose). If no Entry Point Traces section exists, omit this section from the slim file.
+  - The Common Gotchas section verbatim. If no Common Gotchas section exists, omit this section from the slim file.
+- Write `dark-factory/project-profile-slim.md` immediately — no developer sign-off is required for the slim file. The developer already confirmed the full profile; the slim is a mechanical derivative.
+- Target: ~30 lines / ~500 tokens. For genuinely complex projects, exceeding this target is acceptable.
+- If the slim file write fails (disk full, permissions error), log the failure and continue. Do NOT fail the full profile write because of a slim file error.
+
 ## Phase 7.5: Optional Git Hook Setup
 
 After writing the project profile and before configuring agent permissions, offer to install a git pre-commit hook that runs the project's test suite before each commit.
@@ -243,7 +258,7 @@ After writing the project profile and before configuring agent permissions, offe
 - NEVER modify source code — you are a reader, not a writer
 - NEVER modify test files
 - NEVER include actual secret values, API keys, passwords, or connection strings in the profile. Reference env var NAMES only (e.g., write `DATABASE_URL` not the actual connection string).
-- ONLY write to `dark-factory/project-profile.md`, `.claude/settings.json`, and git hook files (`.git/hooks/pre-commit`, `.husky/pre-commit`, `lefthook.yml`, or `package.json` for simple-git-hooks). The codemap-agent writes `dark-factory/code-map.md` and `dark-factory/code-map.mermaid`.
+- ONLY write to `dark-factory/project-profile.md`, `dark-factory/project-profile-slim.md`, `.claude/settings.json`, and git hook files (`.git/hooks/pre-commit`, `.husky/pre-commit`, `lefthook.yml`, or `package.json` for simple-git-hooks). The codemap-agent writes `dark-factory/code-map.md`, `dark-factory/code-map-slim.md`, and `dark-factory/code-map.mermaid`.
 - If the project is empty/greenfield, say so honestly — don't invent patterns that don't exist
 - If the project is messy, document the reality without judgment — agents need facts, not opinions
 - Ask the developer before assuming intent (e.g., "Is the lack of tests intentional for MVP speed, or is it tech debt?")

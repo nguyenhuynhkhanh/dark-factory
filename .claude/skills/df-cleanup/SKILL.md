@@ -17,6 +17,19 @@ Optional: `--rebuild` — reconstruct the promoted test registry from annotation
 - Read `dark-factory/manifest.json`
 - If manifest doesn't exist or is empty, report "No features tracked" and stop
 
+### 1.5. Slim File Refresh
+
+Before checking promoted test health, re-generate both slim files from the current full files.
+
+- **Profile slim refresh**: Check whether `dark-factory/project-profile.md` exists.
+  - If yes: re-generate `dark-factory/project-profile-slim.md` from it using the extraction rules in `dark-factory/templates/project-profile-slim-template.md`. Log: "Generated project-profile-slim.md from project-profile.md."
+  - If no: skip. Log: "project-profile.md not found — skipping slim profile refresh."
+- **Code map slim refresh**: Check whether `dark-factory/code-map.md` exists.
+  - If yes: re-generate `dark-factory/code-map-slim.md` from it. Preserve the `Git hash:` header from the full file (copy the identical hash value). Log: "Generated code-map-slim.md from code-map.md."
+  - If no: skip. Log: "code-map.md not found — skipping slim map refresh."
+- This step is **unconditional** — always regenerate when the full file exists. Do not check whether the slim files are already fresh; a cheap re-generation is safer than a staleness check with edge cases.
+- If a slim file write fails, log the failure and continue. Do NOT abort cleanup.
+
 ### 2. Promoted Test Health Check
 
 Before scanning the manifest for stuck features, verify the health of all promoted tests.
