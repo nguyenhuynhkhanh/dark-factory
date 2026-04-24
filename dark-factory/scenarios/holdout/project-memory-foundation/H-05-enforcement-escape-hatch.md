@@ -1,4 +1,4 @@
-# Scenario: Invariants TEMPLATE entry carries either enforced_by or enforcement — not neither, not both accidentally
+# Scenario: Template documents the enforced_by / enforcement requirement, and template example entry demonstrates it
 
 ## Type
 edge-case
@@ -7,17 +7,20 @@ edge-case
 critical — BR-4 is the anti-aspiration guardrail. An invariant with no enforcement proof is a wish, not a rule.
 
 ## Preconditions
-- `dark-factory/memory/invariants.md` exists with a TEMPLATE entry.
+- `dark-factory/templates/project-memory-template.md` exists.
 
 ## Action
-Parse the TEMPLATE entry in `invariants.md`. Extract the fields `enforced_by` and `enforcement`.
+Read the template file. Locate the invariants section.
+
+1. Verify the template text explicitly states that exactly one of `enforced_by` or `enforcement` is required (not both optional, not both always required).
+2. Locate the complete example invariant entry in the template. Extract its `enforced_by` and `enforcement` fields.
 
 ## Expected Outcome
-- At least one of `enforced_by` or `enforcement` is populated with a meaningful value.
-- If `enforced_by` is present, it contains a test file path (e.g., starts with `tests/` or `test/`, ends with `.test.js`, `.test.ts`, `.spec.js`, `.spec.ts`, or similar).
-- If `enforcement` is present, its value is exactly one of `runtime` or `manual` (strict enum).
-- If both are present, that is acceptable (belt-and-suspenders), but the TEMPLATE entry need not demonstrate both.
-- The TEMPLATE entry MUST NOT leave both fields empty / missing / set to `TBD`.
+- The template contains explicit prose or a schema note stating: "either `enforced_by` OR `enforcement` is required — at least one must be present."
+- The example invariant entry satisfies this constraint: at least one of `enforced_by` or `enforcement` is populated with a meaningful value.
+- If `enforced_by` is present in the example, it contains a test file path (e.g., starts with `tests/`, ends with `.test.js` or similar).
+- If `enforcement` is present in the example, its value is exactly one of `runtime` or `manual` (strict enum).
+- The example entry does NOT leave both fields empty / missing / set to a literal `TODO`.
 
 ## Notes
-Validates FR-11, BR-4. Also validates that the template file documents this constraint (see H-04 for the template-side check).
+Validates FR-12, BR-4. The validation target is now the template's example entry (not a TEMPLATE entry in a shard file, which no longer exists). Also validates that the template documents this constraint (see H-04 for the broader template-completeness check).

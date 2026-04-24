@@ -1,30 +1,32 @@
-# Scenario: H-26 — Foundation template pre-seeds IDs; onboard starts at max+1
+# Scenario: H-26 — ID assignment scans ALL shard files for global max; no per-shard-local counters
 
 ## Type
 edge-case
 
 ## Priority
-medium — EC-18, FR-17. Correct ID assignment is critical for downstream references.
+high — EC-18, FR-17, BR-12. Correct global ID assignment is critical for cross-shard reference integrity.
 
 ## Preconditions
 - Phase 3.7 / Phase 7 Memory Sign-Off documents ID assignment.
 
 ## Action
 Structural test asserts the ID-assignment documentation:
-1. Before writing, the agent scans each existing memory file (if present from foundation or prior run) for the highest `INV-NNNN` / `DEC-NNNN` / `FEAT-NNNN` numeric portion.
-2. The first new entry gets max+1 (or 1 if none present).
-3. This applies to BOTH bootstrap (where foundation may have pre-seeded example entries) AND refresh (where previous onboard entries exist).
+1. Before assigning IDs to new entries, the agent scans ALL existing shard files in `dark-factory/memory/` (not just the target shard) for the highest `INV-NNNN` numeric portion across all of them.
+2. The first new entry gets global_max+1 (or 1 if no existing entries found across any shard).
+3. This global scan applies to BOTH bootstrap (where any shard may have been pre-seeded by a prior partial run) AND incremental refresh (where previous onboard entries exist across multiple shards).
 4. IDs are sequential with zero-padding to 4 digits (`INV-0001`, `INV-0002`, ...).
-5. IDs are NEVER reused, even if the developer rejects a candidate mid-sign-off — rejected candidates simply do not consume an ID in the final output; they held a `CANDIDATE-N` session ID that is discarded.
+5. IDs are NEVER reused or per-shard-local — an `INV-0001` in `invariants-security.md` and an `INV-0002` in `invariants-architecture.md` are both valid; an `INV-0001` in both is a collision and must not occur.
+6. Rejected candidates do not consume an ID in the final output — they held a session `CANDIDATE-N` ID that is discarded.
 
 ## Expected Outcome
-- Max-scan rule documented.
+- Global max-scan rule documented (scanning all shards, not just the destination shard).
 - Zero-padding documented.
-- ID non-reuse documented.
+- ID non-reuse and no per-shard-local counters documented explicitly.
 - Distinction between session-`CANDIDATE-N` IDs and permanent `NNNN` IDs is clear.
+- Bootstrap and incremental-refresh both use the global scan.
 
 ## Failure Mode (if applicable)
-If ID collision on pre-seeded templates is not handled, test fails — it would produce duplicate IDs in the output.
+If the documentation describes a per-shard ID counter (each shard starts at 0001 independently), test fails — this would produce duplicate IDs across shards. If the global scan requirement is absent, test fails.
 
 ## Notes
-Foundation may seed `INV-0001` as a worked example showing the schema. Onboard must start at `INV-0002` in that case. Auto-detecting the max is the safest approach.
+TEMPLATE placeholder entries no longer exist in shard files (eliminated by design — shards ship with only YAML frontmatter). The ID collision concern now comes from prior bootstrap runs writing `INV-0001` to `invariants-security.md` and a subsequent run naively starting from 1 again in `invariants-architecture.md`. The global scan is the safeguard. This replaces the original TEMPLATE-collision scenario, which was premised on TEMPLATE placeholder entries that no longer exist in the shard layout.

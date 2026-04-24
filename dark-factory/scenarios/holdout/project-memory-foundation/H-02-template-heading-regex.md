@@ -1,26 +1,37 @@
-# Scenario: Every TEMPLATE heading matches the machine-parseable regex
+# Scenario: Index entry heading rows match the machine-parseable format regex
 
 ## Type
 edge-case
 
 ## Priority
-critical — architect-agent's future invariant probe will grep headings without LLM help. If the format drifts, the probe silently returns zero matches.
+critical — architect-agent's future invariant probe will grep index headings without LLM help. If the format drifts, the probe silently returns zero matches.
 
 ## Preconditions
-- All three memory files exist.
+- `dark-factory/memory/index.md` exists.
+- The index ships with zero entry rows on first install.
 
 ## Action
-Read each memory file. Find every line that starts with `## ` (second-level heading). For each such line, test it against the regex:
+Read `index.md`. Find every line that starts with `## ` (second-level heading). For each such line, test it against the index entry heading regex:
 ```
-^## (INV|DEC|FEAT)-(\d{4}|TEMPLATE|TBD-[a-z0-9-]+): .+$
+^## (INV|DEC|FEAT)-\d{4} \[type:[a-z]+\] \[domain:[a-z—-]+\] \[tags:[^\]]*\] \[status:[a-z—-]+\] \[shard:[a-z0-9._-]+\]$
 ```
+
+For the freshly shipped empty index, verify:
+- Zero `## ` headings exist in the body (confirms entryCount: 0 is honest).
+
+For simulation purposes (or if any future entries exist), verify:
+- Every `## ` heading in the body matches the regex above.
+- FEAT entries use `[domain:—]` and `[status:—]`.
+- No heading uses the form `## INV-TEMPLATE:` or `## DEC-TEMPLATE:` — those patterns are banned from the index.
+
+For shard files (`invariants-*.md`, `decisions-*.md`):
+- Verify that if entries exist, they match the entry heading form: `^## (INV|DEC)-(\d{4}|TBD-[a-z0-9-]+): .+$`
+- Freshly shipped shard files have zero headings — verify.
 
 ## Expected Outcome
-- In `invariants.md`: every `## ` heading that is a memory entry matches `^## INV-(\d{4}|TEMPLATE|TBD-[a-z0-9-]+): .+$`.
-- In `decisions.md`: every matching heading uses `DEC-` prefix.
-- In `ledger.md`: every matching heading uses `FEAT-` prefix.
-- Shipped skeletons use only the `TEMPLATE` form (e.g., `## INV-TEMPLATE: ...`) — no `0001` entries exist yet (those are reserved for promote-agent per FR-12).
-- Headings that are prose section titles (e.g., `## How to use this file`) are either structured below level-2 (use `### `) OR are explicitly allowed by the test (e.g., excluded by content — they do NOT match the entry regex but still produce valid markdown).
+- Fresh install: index body has zero `## ` headings; all six shards have zero `## ` headings; ledger has zero `## ` headings.
+- Any index entry rows that exist match the bracket-metadata format precisely.
+- No TEMPLATE-style headings appear in any file (index or shards).
 
 ## Notes
-Validates FR-3, FR-4, FR-5, NFR-4. The regex is load-bearing because later sub-specs rely on it.
+Validates FR-3, FR-6, NFR-4. The heading regex is load-bearing because later sub-specs rely on it for grep-based probes. This scenario replaces the old H-02 which validated TEMPLATE heading regex across the old three-file layout.

@@ -1,4 +1,4 @@
-# Scenario: Out-of-scope files are not touched by this spec
+# Scenario: Out-of-scope files are not touched by this spec; old monolithic files are not created
 
 ## Type
 regression
@@ -22,10 +22,11 @@ Run `git diff --name-only <baseline>..HEAD` on the branch that lands this spec. 
 - `dark-factory/templates/debug-report-template.md` is NOT modified.
 - `plugins/dark-factory/templates/spec-template.md` is NOT modified.
 - `plugins/dark-factory/templates/debug-report-template.md` is NOT modified.
-- `dark-factory/manifest.json` is NOT modified beyond standard manifest bookkeeping if any (if the implementation accidentally edited it, flag).
+- `dark-factory/manifest.json` is NOT modified beyond standard manifest bookkeeping if any.
 - `dark-factory/promoted-tests.json` is NOT modified.
 - `.claude/rules/dark-factory.md` is NOT modified.
-- `plugins/dark-factory/.claude/rules/dark-factory.md` and `plugins/dark-factory/rules/dark-factory-context.md` MAY be modified only to mirror the source `.claude/rules/dark-factory-context.md` change.
+- `plugins/dark-factory/.claude/rules/dark-factory.md` MAY only be modified to mirror the source `.claude/rules/dark-factory-context.md` change.
+- **OLD monolithic filenames must NOT be created**: `dark-factory/memory/invariants.md` and `dark-factory/memory/decisions.md` MUST NOT exist in the changed file list. The new layout uses sharded files only.
 
 ## Notes
-Validates AC-9, AC-10, AC-11, AC-12 and the "Files you MUST NOT touch" directive. Acts as the enforcement mechanism for wave-plan discipline — if this scenario fails, the foundation spec has leaked into another sub-spec's territory.
+Validates AC-12, AC-13, AC-14, AC-15 and the "Files you MUST NOT touch" directive. The final bullet guards against an implementation that creates the old monolithic files alongside the new sharded files — a hybrid that would confuse downstream sub-specs.

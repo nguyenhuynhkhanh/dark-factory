@@ -1,4 +1,4 @@
-# Scenario: project-profile-template.md contains pointer to memory, preserves existing Invariants bullet
+# Scenario: project-profile-template.md contains pointer to memory shards, preserves existing Invariants bullet
 
 ## Type
 feature
@@ -13,9 +13,10 @@ high — profile readers need to know where canonical invariants live.
 Read the project profile template and inspect the Business Domain Entities section.
 
 ## Expected Outcome
-- The Business Domain Entities section contains a pointer note referencing `dark-factory/memory/invariants.md` as the canonical invariant registry.
+- The Business Domain Entities section contains a pointer note referencing `dark-factory/memory/invariants-*.md` shards (or equivalently the `dark-factory/memory/` directory) as the canonical invariant registry.
 - The existing `- **Invariants**: ...` bullet line is still present as a human-readable summary (NOT removed).
+- The pointer note does NOT reference `dark-factory/memory/invariants.md` (the old monolithic filename — that file no longer exists).
 - The rest of the template (Overview, Tech Stack, Architecture, etc.) is unchanged except for the pointer addition.
 
 ## Notes
-Validates FR-16. The profile template change is additive — no existing content is removed.
+Validates FR-17. The profile template change is additive — no existing content is removed. The pointer reference uses the shard naming convention (`invariants-*.md`) or the directory path to avoid coupling to any specific shard filename.

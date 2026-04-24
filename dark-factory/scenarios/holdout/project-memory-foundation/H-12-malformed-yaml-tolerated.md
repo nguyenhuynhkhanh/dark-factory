@@ -12,17 +12,15 @@ medium — if this spec ships a defensive parser helper, it must not throw on ma
   - (b) The spec ships NO parser. In that case, this scenario verifies that the rule file and/or the setup test explicitly document the expected behavior for malformed files.
 
 ## Action
-Construct a temporary malformed copy of `invariants.md`:
+Construct a temporary malformed copy of `dark-factory/memory/invariants-security.md`:
 ```
 ---
 version: 1
-lastUpdated:
+lastUpdated: 2026-04-24
 generatedBy: bootstrap
 gitHash: TBD
 [[[broken-yaml-line
 ---
-
-## INV-TEMPLATE: ...
 ```
 
 Attempt to parse this malformed file.
@@ -39,4 +37,4 @@ If no helper is shipped:
 - The overall behavior is: malformed file is tolerated, downstream agents proceed as if the file contained zero entries.
 
 ## Notes
-Validates EC-2, Error Handling row for malformed YAML. Forward-compatible: later sub-specs can require a stricter parser, but this foundation must at least not crash.
+Validates EC-2, Error Handling row for malformed YAML. Uses `invariants-security.md` as the test subject (one of the new shard files, replacing the old `invariants.md` reference). Forward-compatible: later sub-specs can require a stricter parser, but this foundation must at least not crash.
