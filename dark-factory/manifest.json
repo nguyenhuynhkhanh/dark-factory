@@ -54,6 +54,6 @@
       "rounds": 0,
       "group": "project-memory",
       "dependencies": ["project-memory-foundation", "project-memory-consumers", "project-memory-onboard"]
-    },
+    }
   }
 }
