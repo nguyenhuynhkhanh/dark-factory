@@ -1,17 +1,54 @@
-# Secrets
-*.gao
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Dependencies
-node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Build output
-dist/
-build/
+# testing
+/coverage
 
-# Environment
-.env
-.env.*
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# env files (can opt-in for committing if needed)
+.env*
 !.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# cloudflare
+.open-next/
+.wrangler/
+
+# local dev seed (contains credentials)
+db/seed.sql
 
 # IDE
 .idea/
@@ -19,22 +56,12 @@ build/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Coverage
-coverage/
-
 # Temp
 tmp/
 temp/
+
+# Secrets
+*.gao
 
 # Claude Code — selectively track agents and skills
 /.claude/*
@@ -42,5 +69,6 @@ temp/
 !/.claude/rules/
 !/.claude/skills/
 
-# Dark Factory results (local test output)
+# Dark Factory worktrees and results
+.claude/worktrees/
 dark-factory/results/

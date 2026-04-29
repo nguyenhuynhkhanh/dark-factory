@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "prime-factory",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "prime-factory",
+      "database_id": "7a5a5c0b-f2ba-4c55-91c1-b513a2b8eabd",
+      "migrations_dir": "db/migrations"
+    }
+  ]
+}
