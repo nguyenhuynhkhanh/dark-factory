@@ -113,7 +113,13 @@ After ALL Playwright tests: kill background server via process group kill (`kill
 
 ## Step 2.75: Full-Suite Regression Gate (validator mode only)
 
-Run full promoted test suite + new holdout in one pass. Classify failures into four mutually exclusive classes (first match wins):
+Run full promoted test suite + new holdout in one pass, preserving full output on disk and filtering context injection:
+```
+{testCommand} 2>&1 | tee /tmp/regression-{specName}.tap | grep -E '^not ok|^# (tests|pass|fail)'
+```
+The full TAP stream is written to `/tmp/regression-{specName}.tap` for debugging. Only failure lines (`not ok`) and the summary block (`# tests`, `# pass`, `# fail`) are injected into agent context.
+
+Classify failures into four mutually exclusive classes (first match wins):
 
 1. **new-holdout** — failing test is from this feature's holdout → route to code-agent.
 2. **invariant-regression** — failing promoted test's `// Guards:` annotation overlaps files this spec touched → route to code-agent; use annotation / `promoted-tests.json` for behavioral description, NOT holdout content.

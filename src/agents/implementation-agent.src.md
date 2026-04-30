@@ -67,7 +67,10 @@ Run the project's test suite if not already run at the orchestrator level:
 1. Read `dark-factory/project-profile.md` and extract the test command from `Run:` field.
 2. If profile or `Run:` field missing: warn "No test command found in project profile. Skipping pre-flight test gate." and proceed.
 3. If `--skip-tests`: log "Pre-flight test gate skipped by --skip-tests flag." Record `"testGateSkipped": true` and timestamp in manifest. Proceed.
-4. Run the test suite. If failures: report ALL failures and STOP. Do NOT proceed to implementation.
+4. Run the test suite. Pipe through tee to preserve full output and filter context injection:
+   `{testCommand} 2>&1 | tee /tmp/preflight-{specName}.tap | grep -E '^not ok|^# (tests|pass|fail)'`
+   Full TAP goes to `/tmp/preflight-{specName}.tap`; only failures and summary enter context.
+   If failures present in filtered output: report and STOP. Do NOT proceed to implementation.
 
 ## Smart Re-run Detection
 
@@ -79,7 +82,9 @@ Check if `dark-factory/results/{name}/` has previous results:
 
 ### Step 0.5: Determine Parallelism
 
-Read spec's **Implementation Size Estimate** for suggested parallel tracks. small=1, medium=1-2, large=2-3, x-large=3-4 code-agents. Zero file overlap between tracks, max 4, auto-determine without developer confirmation.
+Read spec's **Implementation Size Estimate** for suggested parallel tracks using `limit: 40` (header fields are always within the first 40 lines of a valid spec). small=1, medium=1-2, large=2-3, x-large=3-4 code-agents. Zero file overlap between tracks, max 4, auto-determine without developer confirmation.
+
+If not found in first 40 lines: warn and default to medium.
 
 ### Best-of-N (quality mode + Tier 3 only)
 
