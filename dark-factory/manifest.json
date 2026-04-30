@@ -23,17 +23,6 @@
       "dependencies": [
         "project-memory-foundation"
       ]
-    },
-    "token-opt-trimming": {
-      "type": "feature",
-      "status": "active",
-      "specPath": "dark-factory/specs/features/token-opt-trimming.spec.md",
-      "created": "2026-04-30T00:00:00Z",
-      "rounds": 0,
-      "group": "token-opt",
-      "dependencies": [
-        "token-opt-architect-phase"
-      ]
     }
   }
 }

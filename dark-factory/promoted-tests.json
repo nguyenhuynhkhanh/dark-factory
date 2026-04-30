@@ -174,8 +174,8 @@
         {
           "path": "tests/dark-factory-contracts.test.js",
           "colocated": true,
-          "startMarker": "// describe: ao-agent-roles — plugin mirror parity",
-          "endMarker": "// end: ao-agent-roles — plugin mirror parity"
+          "startMarker": "// describe: ao-agent-roles \u2014 plugin mirror parity",
+          "endMarker": "// end: ao-agent-roles \u2014 plugin mirror parity"
         }
       ],
       "promotedAt": "2026-04-29T00:00:00Z",
@@ -272,6 +272,22 @@
       ],
       "promotedAt": "2026-04-30T00:00:00Z",
       "holdoutScenarioCount": 25,
+      "annotationFormat": "header-comment",
+      "sectionMarkers": true
+    },
+    {
+      "feature": "token-opt-trimming",
+      "type": "feature",
+      "files": [
+        {
+          "path": "tests/dark-factory-setup.test.js",
+          "colocated": true,
+          "startMarker": "// DF-PROMOTED-START: token-opt-trimming",
+          "endMarker": "// DF-PROMOTED-END: token-opt-trimming"
+        }
+      ],
+      "promotedAt": "2026-04-30T13:00:00Z",
+      "holdoutScenarioCount": 7,
       "annotationFormat": "header-comment",
       "sectionMarkers": true
     }

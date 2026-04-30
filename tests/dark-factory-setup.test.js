@@ -7230,3 +7230,119 @@ describe("token-opt-architect-phase — plugin mirror parity", () => {
 });
 
 // DF-PROMOTED-END: token-opt-architect-phase
+
+// DF-PROMOTED-START: token-opt-trimming
+// Promoted from Dark Factory holdout: token-opt-trimming
+// Guards: .claude/agents/implementation-agent.md, .claude/agents/test-agent.md, plugins/dark-factory/agents/implementation-agent.md, plugins/dark-factory/agents/test-agent.md
+
+describe("token-opt-trimming — pre-flight gate uses tee + grep filter (AC-1, AC-2, FR-1, FR-2)", () => {
+  const implAgent = readAgent("implementation-agent");
+
+  it("implementation-agent pre-flight gate includes tee command writing to /tmp/preflight- path (AC-1, FR-1)", () => {
+    assert.ok(
+      implAgent.includes("tee") && implAgent.includes("/tmp/preflight-"),
+      "implementation-agent pre-flight gate must use tee to write full TAP output to /tmp/preflight-{specName}.tap"
+    );
+  });
+
+  it("implementation-agent pre-flight gate includes canonical grep filter (AC-2, FR-2)", () => {
+    assert.ok(
+      implAgent.includes("grep -E '^not ok|^# (tests|pass|fail)'"),
+      "implementation-agent pre-flight gate must include the canonical grep filter expression"
+    );
+  });
+
+  it("implementation-agent pre-flight gate tee and grep filter appear together (AC-1, AC-2)", () => {
+    const preflight = implAgent.indexOf("Pre-flight Test Gate");
+    const teePos = implAgent.indexOf("/tmp/preflight-", preflight);
+    const grepPos = implAgent.indexOf("grep -E '^not ok|^# (tests|pass|fail)'", preflight);
+    assert.ok(preflight !== -1, "Pre-flight Test Gate section must exist");
+    assert.ok(teePos !== -1, "tee + /tmp/preflight- must appear in or after Pre-flight Test Gate section");
+    assert.ok(grepPos !== -1, "grep filter must appear in or after Pre-flight Test Gate section");
+  });
+
+  it("implementation-agent pre-flight gate documents stop-on-failure behavior with filtered output (AC-4, FR-3)", () => {
+    assert.ok(
+      implAgent.includes("not ok") && (implAgent.includes("STOP") || implAgent.includes("stop")),
+      "implementation-agent pre-flight gate must document that not ok lines trigger stop"
+    );
+  });
+});
+
+describe("token-opt-trimming — test-agent Step 2.75 uses tee + grep filter (AC-5, FR-4)", () => {
+  const testAgent = readAgent("test-agent");
+
+  it("test-agent Step 2.75 includes tee command writing to /tmp/regression- path (AC-5, FR-4, BR-2)", () => {
+    assert.ok(
+      testAgent.includes("tee") && testAgent.includes("/tmp/regression-"),
+      "test-agent Step 2.75 must use tee to write full TAP output to /tmp/regression-{specName}.tap"
+    );
+  });
+
+  it("test-agent Step 2.75 includes canonical grep filter expression (AC-5, FR-4, BR-1)", () => {
+    assert.ok(
+      testAgent.includes("grep -E '^not ok|^# (tests|pass|fail)'"),
+      "test-agent Step 2.75 must include the canonical grep filter expression identical to pre-flight gate"
+    );
+  });
+
+  it("test-agent Step 2.75 still documents all four failure classification classes (AC-6, P-05)", () => {
+    assert.ok(testAgent.includes("new-holdout"), "test-agent Step 2.75 must still document new-holdout failure class");
+    assert.ok(testAgent.includes("invariant-regression"), "test-agent Step 2.75 must still document invariant-regression failure class");
+    assert.ok(testAgent.includes("pre-existing-regression"), "test-agent Step 2.75 must still document pre-existing-regression failure class");
+    assert.ok(testAgent.includes("expected-regression"), "test-agent Step 2.75 must still document expected-regression failure class");
+  });
+
+  it("test-agent Step 2.75 still documents structured output fields (P-05)", () => {
+    assert.ok(testAgent.includes("preExistingRegression"), "test-agent Step 2.75 must still include preExistingRegression field");
+    assert.ok(testAgent.includes("expectedRegression"), "test-agent Step 2.75 must still include expectedRegression field");
+  });
+});
+
+describe("token-opt-trimming — implementation-agent Step 0.5 reads spec with limit:40 (AC-7, FR-5)", () => {
+  const implAgent = readAgent("implementation-agent");
+
+  it("implementation-agent Step 0.5 includes limit: 40 constraint for spec header read (AC-7, FR-5)", () => {
+    assert.ok(
+      implAgent.includes("limit: 40") || implAgent.includes("limit:40"),
+      "implementation-agent Step 0.5 must include limit: 40 when reading spec for Implementation Size Estimate"
+    );
+  });
+
+  it("implementation-agent Step 0.5 limit:40 appears in Step 0.5 section (AC-7, FR-5)", () => {
+    const step05Pos = implAgent.indexOf("Step 0.5");
+    const limitPos = implAgent.indexOf("limit: 40", step05Pos);
+    const limitPos2 = implAgent.indexOf("limit:40", step05Pos);
+    assert.ok(step05Pos !== -1, "Step 0.5 section must exist");
+    assert.ok(limitPos !== -1 || limitPos2 !== -1, "limit: 40 must appear in Step 0.5 section");
+  });
+
+  it("implementation-agent Step 0.5 documents warn + default to medium when field not found (AC-8, FR-6)", () => {
+    assert.ok(
+      implAgent.includes("defaulting to medium") || implAgent.includes("default to medium"),
+      "implementation-agent Step 0.5 must document defaulting to medium when not found in first 40 lines"
+    );
+  });
+
+  it("implementation-agent Step 0.5 documents the 40-line boundary (AC-8)", () => {
+    assert.ok(
+      implAgent.includes("first 40 lines") || implAgent.includes("40 lines"),
+      "implementation-agent must document that the limit is 40 lines"
+    );
+  });
+});
+
+describe("token-opt-trimming — plugin mirror parity (AC-10, P-08)", () => {
+  it("plugins/dark-factory/agents/implementation-agent.md matches .claude/agents version (AC-10)", () => {
+    const source = readAgent("implementation-agent");
+    const plugin = fs.readFileSync(path.join(ROOT, "plugins", "dark-factory", "agents", "implementation-agent.md"), "utf8");
+    assert.equal(source, plugin, "Plugin implementation-agent.md must match source (token-opt-trimming)");
+  });
+
+  it("plugins/dark-factory/agents/test-agent.md matches .claude/agents version (AC-10)", () => {
+    const source = readAgent("test-agent");
+    const plugin = fs.readFileSync(path.join(ROOT, "plugins", "dark-factory", "agents", "test-agent.md"), "utf8");
+    assert.equal(source, plugin, "Plugin test-agent.md must match source (token-opt-trimming)");
+  });
+});
+// DF-PROMOTED-END: token-opt-trimming
