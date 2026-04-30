@@ -1,22 +1,6 @@
 {
   "version": 1,
   "features": {
-    "playwright-test-hardening": {
-      "type": "feature",
-      "status": "promoted",
-      "specPath": "dark-factory/specs/features/playwright-test-hardening.spec.md",
-      "created": "2026-04-15T00:00:00Z",
-      "rounds": 1,
-      "group": "playwright-e2e",
-      "dependencies": ["playwright-onboard"],
-      "passedAt": "2026-04-30T00:00:00Z",
-      "promotedAt": "2026-04-30T00:00:00Z",
-      "promotedTestPath": "tests/dark-factory-setup.test.js",
-      "testGateSkipped": false,
-      "actualFiles": 4,
-      "estimatedFiles": 4,
-      "mode": "balanced"
-    },
     "playwright-lifecycle": {
       "type": "feature",
       "status": "active",
