@@ -1,6 +1,6 @@
 {
   "name": "dark-factory",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "AI-powered development pipeline for Claude Code — specs in, production-grade features out",
   "bin": {
     "dark-factory": "bin/cli.js"

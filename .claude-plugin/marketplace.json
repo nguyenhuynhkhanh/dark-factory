@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official Dark Factory plugins for production-grade AI-powered development",
-    "version": "1.5.0"
+    "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "dark-factory",
       "source": "./plugins/dark-factory",
       "description": "AI-powered development pipeline — specs in, production-grade features out. 7 specialized agents, 8 slash commands, auto-detection rules.",
-      "version": "1.5.0",
+      "version": "2.0.0",
       "author": {
         "name": "Dark Factory"
       },
